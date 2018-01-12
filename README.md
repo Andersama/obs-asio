@@ -44,7 +44,7 @@ Sample Rate selection
 
 #### RtAudio library compilation with ASIO SDK: ####
 
- * Donwload RtAUdio [HERE](http://www.music.mcgill.ca/~gary/rtaudio/) or git clone https://github.com/thestk/rtaudio.git for master HEAD.
+ * Donwload RtAudio [HERE](http://www.music.mcgill.ca/~gary/rtaudio/) or git clone https://github.com/thestk/rtaudio.git for master HEAD.
 * Download the ASIO SDK [HERE](https://www.steinberg.net/en/company/developers.html).
 * From the asio sdk copy these files in rtaudio > include folder:    
     * asio.cpp, asio.h, asiodrivers.cpp, asiodrivers.h, asiodrvr.h, asiolist.cpp, asiolist.h, ginclude.h, iasiodrv.h    
