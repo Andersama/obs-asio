@@ -1,7 +1,7 @@
 # obs-asio
 ![](/images/obs_icon_very_small.png)  ![](/images/TECH_ASIOsmall.png)
 
-#**ASIO plugin for OBS-Studio**#
+## ASIO plugin for OBS-Studio ##
 
 *Authors :* pkv & Andersama
 
