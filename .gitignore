@@ -35,7 +35,8 @@ x64/
 ipch/
 GeneratedFiles/
 .moc/
-rtdeps/
+deps/bin
+deps/include/rtaudio
 
 /other/
 
