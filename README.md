@@ -3,7 +3,7 @@
 
 ## ASIO plugin for OBS-Studio ##
 
-*Authors :* pkv & Andersama
+* Authors : * pkv & Andersama
 
 ## What is ASIO ? ##
 Audio Stream Input/Output (ASIO) is a computer sound card driver protocol for digital audio specified by Steinberg, providing a low-latency and high fidelity interface between a software application and a computer's sound card. Whereas Microsoft's DirectSound is commonly used as an intermediary signal path for non-professional users, ASIO allows musicians and sound engineers to access external hardware directly. (From [ASIO Wikipedia article](https://en.wikipedia.org/wiki/Audio_Stream_Input/Output) ).
@@ -44,11 +44,7 @@ Sample Rate selection
 
 #### RtAudio library compilation with ASIO SDK: ####
 
- * Donwload RtAudio [HERE](http://www.music.mcgill.ca/~gary/rtaudio/) or git clone https://github.com/thestk/rtaudio.git for master HEAD.
-* Download the ASIO SDK [HERE](https://www.steinberg.net/en/company/developers.html).
-* From the asio sdk copy these files in rtaudio > include folder:    
-    * asio.cpp, asio.h, asiodrivers.cpp, asiodrivers.h, asiodrvr.h, asiolist.cpp, asiolist.h, ginclude.h, iasiodrv.h    
-    * The files can be found in asiosdk2.3/common, asiosdk2.3/host, asiosdk2.3/host/pc folders once you have extracted the asio sdk.    
+ * Donwload RtAudio [HERE](http://www.music.mcgill.ca/~gary/rtaudio/) or git clone https://github.com/thestk/rtaudio.git for master HEAD.  
 * In RtAudio folder, create a build folder : mkdir build.    
 * With cmake-gui, give the paths of RtAudio folder and build folder. Click Configure and Generate.
 * Open the Project in Visual Studio. Select either Release or Debug. In the Build Menu, hit build.   
@@ -60,19 +56,19 @@ Sample Rate selection
 **Compile the plugin as well as OBS-Studio**
 
 * git clone https://github.com/pkviet/obs-studio    
-* In Obs-Studio folder, git checkout asiort (select asiort branch).        
+* In OBS-Studio folder, git checkout asiort (select asiort branch).        
 * compile following instructions given in OBS-Studio wiki [here](https://github.com/jp9000/obs-studio/wiki/install-instructions#windows-build-directions)      
-* In particular, the locations of rtaudio.dll, rtaudio.h and rtaudio_static.lib must be given to cmake (cmake-gui).
+* In particular, the locations of 'rtaudio.dll', 'rtaudio.h' and 'rtaudio\_static.lib' must be given to cmake (cmake-gui).    
 * Either drop rtaudio.h in the deps/win64/include or deps/win32/include folder (given by DepsPath)    
-    * OR indicate RTAUDIO_INCLUDE_DIR = path to dir with rtaudio.h   
-* Similarly drop rtaudio.dll & rtaudio_static.lib in deps/win64/bin or win32/bin
-    * OR provide RTAUDIO_LIBRARY = filepath to libraries.
+    * OR indicate RTAUDI\O_INCLUDE_DIR = path to dir with rtaudio.h   
+* Similarly drop rtaudio.dll & rtaudio\_static.lib in deps/win64/bin or win32/bin
+    * OR provide RTAUDIO\_LIBRARY = filepath to libraries.
 *  The rest is as explained in OBS-Studio wiki.
     
 **Instructions for compiling the plugin as stand-alone.**
 
-* Download the plugins/win-asio folder from the repo : https://github.com/pkviet/obs-asio/releases/
+* Git clone this repo : https://github.com/pkviet/obs-asio/
 * The build instructions are similar to those given [here](https://github.com/Palakis/obs-websocket/blob/master/BUILDING.md).  
-* The only difference is that you need to define the include and bin folders of RtAudio library (see above) with RTAUDIO_INCLUDE_DIR and  RTAUDIO_LIBRARY .    
+* The only difference is that you need to define the include and bin folders of RtAudio library (see above) with RTAUDIO\_INCLUDE\_DIR and  RTAUDIO\_LIBRARY .    
 
 
