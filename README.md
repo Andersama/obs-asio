@@ -3,7 +3,7 @@
 
 ## ASIO plugin for OBS-Studio ##
 
-* Authors : * pkv & Andersama
+**Authors** :  pkv & Andersama
 
 ## What is ASIO ? ##
 Audio Stream Input/Output (ASIO) is a computer sound card driver protocol for digital audio specified by Steinberg, providing a low-latency and high fidelity interface between a software application and a computer's sound card. Whereas Microsoft's DirectSound is commonly used as an intermediary signal path for non-professional users, ASIO allows musicians and sound engineers to access external hardware directly. (From [ASIO Wikipedia article](https://en.wikipedia.org/wiki/Audio_Stream_Input/Output) ).
