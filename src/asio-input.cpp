@@ -362,7 +362,7 @@ int mix(uint8_t *inputBuffer, obs_source_audio *out, size_t bytes_per_ch, int ro
 		if (route[i] > -1 && route[i] < (int)recorded_device_chs) {
 			out->data[j++] = inputBuffer + route[i] * bytes_per_ch;
 		}
-		else if (route[i] = -1) {
+		else if (route[i] == -1) {
 			uint8_t * silent_buffer;
 			silent_buffer = (uint8_t *)calloc(bytes_per_ch, 1);
 			out->data[j++] = silent_buffer;
