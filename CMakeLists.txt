@@ -65,7 +65,7 @@ add_library(obs-asio MODULE
 )
 target_link_libraries(obs-asio
 	libobs
-	${BASS_ASIO_LIBRARY}
+	${BASS_ASIO_LIB}
 )
 
 #install_obs_plugin_with_data(win-asio data) ==> internal plugin install
