@@ -11,8 +11,8 @@ project(obs-asio)
 ##########################################
 # find libobs                            #
 ##########################################
-include(external/FindLibObs.cmake)
-find_package(LibObs REQUIRED)
+include(external/FindLibobs.cmake)
+find_package(Libobs REQUIRED)
 
 ##########################################
 # set architecture                       #
@@ -65,7 +65,7 @@ add_library(obs-asio MODULE
 )
 target_link_libraries(obs-asio
 	libobs
-	${BASS_ASIO_LIBRARY}
+	${BASS_ASIO_LIB}
 )
 
 #install_obs_plugin_with_data(win-asio data) ==> internal plugin install
