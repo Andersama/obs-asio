@@ -3,9 +3,10 @@ cmake_minimum_required(VERSION 3.5)
 project(obs-asio)
 
 # in cmake gui set the following:
-# RTAUDIO_LIBRARY == path of rtaudio_static.lib
-# RTAUDIO_INCLUDE_DIR == path of RtAudio.h
-# put also rtaudio.dll in obs-plugins/bin folder
+# BASS_ASIO_LIB == path of bassasio.lib
+# BASS_ASIO_INCLUDE_DIR == path of bassasio.h
+# put also bassasio.dll in obs-plugins/bin folder
+# be careful there are two versions of the lib and dll (x86 and x64)
 
 ##########################################
 # find libobs                            #
@@ -13,9 +14,9 @@ project(obs-asio)
 include(external/FindLibObs.cmake)
 find_package(LibObs REQUIRED)
 
-#########################################
-# set architecture                      #
-#########################################
+##########################################
+# set architecture                       #
+##########################################
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 	set(ARCH 64)
 else()
@@ -45,8 +46,7 @@ endif()
 
 include_directories(
 #	SYSTEM "${CMAKE_SOURCE_DIR}/libobs"
-	"deps/include/rtaudio"
-	${RTAUDIO_INCLUDE_DIR}
+	${BASS_ASIO_INCLUDE_DIR}
 )
 set(obs-asio-sdk_HEADERS
 	)
@@ -65,11 +65,10 @@ add_library(obs-asio MODULE
 )
 target_link_libraries(obs-asio
 	libobs
-	${RTAUDIO_LIBRARY}
-#	Qt5::Widgets
+	${BASS_ASIO_LIBRARY}
 )
 
-#install_obs_plugin_with_data(win-asio data)
+#install_obs_plugin_with_data(win-asio data) ==> internal plugin install
 #install_external_plugin_with_data(obs-asio data)
 
 set(RELEASE_DIR "${PROJECT_SOURCE_DIR}/release")
