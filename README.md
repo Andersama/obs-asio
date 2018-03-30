@@ -57,6 +57,19 @@ Due to superiour capabilities we advise the use of the bassasio plugin.
 
 #### Compilation of Asio Plugin. ####
 
+**Compile the plugin as well as OBS-Studio**
+
+* git clone --recursive https://github.com/pkviet/obs-studio    
+* In OBS-Studio folder, git checkout asiobass_master.        
+* Create a build folder in obs-studio folder.    
+* Start cmake-gui, choosing as build folder : obs-studio/build and main folder: obs-studio.    
+* As explained in OBS-Studio wiki [here](https://github.com/jp9000/obs-studio/wiki/install-instructions#windows-build-directions) add DepsPath and QtDir paths.      
+* Either drop bassasio.h in the folder $DepsPath/win64/include or $DepsPath/win32/include folder (given by DepsPath)    
+    * OR indicate BASS\_ASIO\_INCLUDE_DIR = path to the folder where bassasio.h is located.   
+* Similarly drop bassasio.dll & bassasio.lib in $DepsPath/win64/bin or $DepsPath/win32/bin     
+    * OR provide BASS\_ASIO\_LIB = filepath to library bassasio.lib ; the bassasio.dll should be dropped in the folder mentioned above.     
+*  The rest is as explained in OBS-Studio wiki.
+    
 **Instructions for compiling the plugin as stand-alone.**
 
 * This requires two separate compilations: one of obs-studio; one of the plugin. So it's not completely standalone.    
@@ -74,20 +87,6 @@ Due to superiour capabilities we advise the use of the bassasio plugin.
 * Build in Visual Studio.   
 * This will create obs-asio.dll ; copy it with bassasio.dll in OBS-Studio Program folder: in "C:\Program Files (x86)\obs-studio\obs-plugins\64bit\bin"     
 (if you have compiled the 64 bit versions).    
-
-**Compile the plugin as well as OBS-Studio**
-
-* git clone --recursive https://github.com/pkviet/obs-studio    
-* In OBS-Studio folder, git checkout asiobass_master.        
-* Create a build folder in obs-studio folder.    
-* Start cmake-gui, choosing as build folder : obs-studio/build and main folder: obs-studio.    
-* As explained in OBS-Studio wiki [here](https://github.com/jp9000/obs-studio/wiki/install-instructions#windows-build-directions) add DepsPath and QtDir paths.      
-* Either drop bassasio.h in the folder $DepsPath/win64/include or $DepsPath/win32/include folder (given by DepsPath)    
-    * OR indicate BASS\_ASIO\_INCLUDE_DIR = path to the folder where bassasio.h is located.   
-* Similarly drop bassasio.dll & bassasio.lib in $DepsPath/win64/bin or $DepsPath/win32/bin     
-    * OR provide BASS\_ASIO\_LIB = filepath to library bassasio.lib ; the bassasio.dll should be dropped in the folder mentioned above.     
-*  The rest is as explained in OBS-Studio wiki.
-    
 
 ### Build instructions for plugin based on RtAudio ###
 
