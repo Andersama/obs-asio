@@ -3,23 +3,28 @@
 
 ## ASIO plugin for OBS-Studio ##
 
-**Authors** :  pkv & Andersama
+**Authors** :  pkv <pkv.stream(a)gmail.com> & Andersama <anderson.john.alexander(a)gmail.com>
 
 ## What is ASIO ? ##
 Audio Stream Input/Output (ASIO) is a computer sound card driver protocol for digital audio specified by Steinberg, providing a low-latency and high fidelity interface between a software application and a computer's sound card. Whereas Microsoft's DirectSound is commonly used as an intermediary signal path for non-professional users, ASIO allows musicians and sound engineers to access external hardware directly. (From [ASIO Wikipedia article](https://en.wikipedia.org/wiki/Audio_Stream_Input/Output) ).
 
 ## This plugin ##
 We developped a plugin for [OBS-Studio](https://obsproject.com/) which is a leading open-source streaming and compositing software.
-It allows capture of ASIO sound devices, which are often professional or semi-professional grade hardware for studio or home-studio use. The plugin is designed for Windows and has been tested on windows 10 x64.
+It allows capture of ASIO sound devices, which are often professional or semi-professional grade hardware for studio or home-studio use. The plugin is designed for Windows and has been tested on windows 10 x64.    
+There are three versions but only one is released. They can be found on branches asiobass, asioportaudio, asiort of this repo.    
+They use different audio API to host asio drivers (namely Bassasio, Portaudio and RtAudio).    
+The Bassasio plugin has the most functionalities; it allows multi-device as well as mutli-client operation.    
+The Portaudio plugin has multi-client but not multi-device capability.    
+Multi-device capability means several asio devices can be used at the same time with Obs-Studio. This is a rare feature because normally Asio sdk prevents this.    
+Multi-client capability means obs can create several asio sources with different channel selections from the same device.    
 
 ## Where are the binaries to download ? ##
-**There aren't any** for legal reasons.
-Unfortunately Steinberg freely provides the ASIO SDK but forbids redistribution of its code.  
-This is incompatible with GPL v2 under which OBS-Studio is licensed.  
-The situation is similar to that of Audacity (see for instance [Audacity Wiki](http://wiki.audacityteam.org/wiki/ASIO_Audio_Interface) ).
-The plugin is therefore non-distributable although licensed under GPL v2; **we can only provide instructions for compilation** ([see here](#how-to-compile-and-install-the-plugin) ).  
-This is of course a disappointing state of affairs given that Steinberg licensed its VST3 SDK under GPL v3.
-Anyone who cares about this issue is invited to make her/his views known to Steinberg via their [Contact page](http://www.steinberg.net/en/support/support_contact.html) :shit:.
+Check the Releases section [here](https://github.com/pkviet/obs-asio/releases).  
+The binaries released were built with our Portaudio fork which implements asio through a GPL v2+ sdk:  
+[https://github.com/pkviet/portaudio/tree/openasio/openasio_sdk](https://github.com/pkviet/portaudio/tree/openasio/openasio_sdk).  
+The binaries are therefore licensed under GPL v2.  
+The plugin based on bassasio can not however be released due to the licensing terms of bassasio library which are incompatible with GPL.  
+We have the project to extend our openAsio sdk to enable mutli-devices support. Those interested in contributing can contact us.  
 
 ## Screenshots ##
 Main window of OBS-Studio with an 8 channel ASIO source    
@@ -36,15 +41,18 @@ Sample Rate selection
 
 ## How to compile and install the plugin ##
 
-There are two versions of the plugin, one built using [RtAudio library](http://www.music.mcgill.ca/~gary/rtaudio/) which is free and open-source,  
-the other relying on [Bassasio library](https://www.un4seen.com/bassasio.html) which is closed-source and free for non-commercial use.  
+There are three versions of the plugin, one built using [RtAudio library](http://www.music.mcgill.ca/~gary/rtaudio/) which is free and open-source,  
+another relying on [Bassasio library](https://www.un4seen.com/bassasio.html) which is closed-source and free for non-commercial use;  
+and lastly one relying on [Portaudio library](http://portaudio.com/) which is free and open source.
 
 * RtAudio plugin: due to ASIO sdk limitations it is not possible to load more than one ASIO driver at a time.  
 This means a single ASIO source can be created in OBS. Duplication of the source however is still possible.  
+* Portaudio plugin (released):  due to ASIO sdk limitations it is not possible to load more than one ASIO driver at a time.  
+But several sources can be created with different channel selections.  
 * Bassasio plugin: the Bassasio library is able to bypass the ASIO sdk limitations. As a result several ASIO device can be used at the same time.  
 Additionally, it is possible to create several ASIO sources from the same device with different channel selections (not duplicates).
 
-Due to superiour capabilities we advise the use of the bassasio plugin. 
+Due to superiour capabilities we advise the use of the bassasio plugin if you are able to compile. 
 
 ### Build instructions for plugin based on bassasio ###
 
@@ -123,4 +131,8 @@ Same as above for plugin with bassasio, except that one needs to compile the RtA
     * OR provide RTAUDIO\_LIBRARY = filepath to libraries.
 *  The rest is as explained in OBS-Studio wiki.
     
+### Build instructions for plugin based on PortAudio ###
+
+* This is similar to RtAudio.  
+* Check the CMakelists.txt file for info on the parameters to define and libs to include.    
 
