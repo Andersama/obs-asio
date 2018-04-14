@@ -93,7 +93,7 @@ Due to superiour capabilities we advise the use of the bassasio plugin if you ar
 * Add also the entry BASS\_ASIO\_LIB = path to the folder where bassasio.lib is located.     
 * In cmake-gui, hit Configure, Generate and open Visual Studio.    
 * Build in Visual Studio.   
-* This will create obs-asio.dll ; copy it with bassasio.dll in OBS-Studio Program folder: in "C:\Program Files (x86)\obs-studio\obs-plugins\64bit\bin"     
+* This will create obs-asio.dll ; copy it with bassasio.dll in OBS-Studio Program folder: in "C:\Program Files (x86)\obs-studio\obs-plugins\64bit\"     
 (if you have compiled the 64 bit versions).    
 
 ### Build instructions for plugin based on RtAudio ###
