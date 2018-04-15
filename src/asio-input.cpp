@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <stdio.h>
 #include <string>
+#include <sstream>
 #include <windows.h>
 #include <util/windows/WinHandle.hpp>
 #include <bassasio.h>
@@ -224,12 +225,19 @@ public:
 	bool previouslyFailed = false;
 	bool useDeviceTiming = false;
 
-	const char* get_id() {
-		const char * format_id = "0x%x";
-		size_t pad = sizeof(obs_source_t *) * 2;
-		char * id_char = (char*)calloc(strlen(format_id) + pad + 1, sizeof(char));
-		sprintf(id_char, format_id, source);
-		return id_char;
+	std::string get_id() {
+		const void * address = static_cast<const void*>(source);
+		std::stringstream ss;
+		ss << "0x" << std::uppercase << (int)address;
+		std::string name = ss.str();
+		return name;
+		//const char * format_id = "0x%x";
+		//size_t pad = sizeof(obs_source_t *) * 2;
+		//char * id_char = (char*)calloc(strlen(format_id) + pad + 1, sizeof(char));
+		//sprintf(id_char, format_id, source);
+		//std::string name = id_char;
+		//free(id_char);
+		//return name.c_str();
 	}
 
 	asio_data() : source(NULL), first_ts(0), device_index(-1) {
@@ -428,6 +436,21 @@ public:
 
 	~device_data() {
 		//free resources?
+		if (all_prepped) {
+			delete receive_signals;
+			for (int i = 0; i < buffer_count; i++) {
+				device_source_audio* _source_audio = get_source_audio(i);
+				int input_chs = _source_audio->input_chs;
+				for (int j = 0; j < input_chs; j++) {
+					if (_source_audio->data[j]) {
+						bfree(_source_audio->data[j]);
+					}
+				}
+				bfree(_source_audio->data);
+			}
+			circlebuf_free(&audio_buffer);
+		}
+
 	}
 
 	//check that all the required device settings have been set
@@ -514,10 +537,10 @@ public:
 
 			for (int i = 0; i < buffer_count; i++) {
 				device_source_audio* _source_audio = get_source_audio(i);
-				_source_audio->data = (uint8_t **)calloc(input_chs, sizeof(uint8_t*));
+				_source_audio->data = (uint8_t **)bzalloc(input_chs * sizeof(uint8_t*))/*calloc(input_chs, sizeof(uint8_t*))*/;
 				for (int j = 0; j < input_chs; j++) {
 					if (!buffer_prepped) {
-						_source_audio->data[j] = (uint8_t*)calloc(buffer_size, 1);
+						_source_audio->data[j] = (uint8_t*)bzalloc(buffer_size)/*calloc(buffer_size, 1)*/;
 					}
 					else if (reallocate_buffer) {
 						uint8_t* tmp = (uint8_t*)realloc(_source_audio->data[j], buffer_size);
@@ -527,6 +550,7 @@ public:
 							return;
 						}
 						else if (tmp == _source_audio->data[j]) {
+							free(tmp);
 							tmp = NULL;
 						}
 						else {
@@ -616,7 +640,7 @@ public:
 		source->isASIOActive = true;
 		ResetEvent(source->stop_listening_signal);
 
-		blog(LOG_INFO, "listener for device %lu created: source: %s", device->device_index, source->get_id());
+		blog(LOG_INFO, "listener for device %lu created: source: %x", device->device_index, source->get_id());
 
 		size_t read_index = device->write_index;//0;
 		int waitResult;
@@ -637,11 +661,13 @@ public:
 				if (source->device_index != device->device_index) {
 					blog(LOG_INFO, "source device index %lu is not device index %lu", source->device_index, device->device_index);
 					blog(LOG_INFO, "%s closing", thread_name.c_str());
+					delete pair;
 					return 0;
 				}
 				else if (!source->isASIOActive) {
-					blog(LOG_INFO, "%s indicated it wanted to disconnect", source->get_id());
+					blog(LOG_INFO, "%x indicated it wanted to disconnect", source->get_id());
 					blog(LOG_INFO, "%s closing", thread_name.c_str());
+					delete pair;
 					return 0;
 				}
 				//uint64_t t_stamp = os_gettime_ns();
@@ -653,46 +679,54 @@ public:
 			else if (waitResult == WAIT_OBJECT_0 + 1) {
 				blog(LOG_INFO, "device %l indicated it wanted to disconnect", device->device_index);
 				blog(LOG_INFO, "%s closing", thread_name.c_str());
+				delete pair;
 				return 0;
 			}
 			else if (waitResult == WAIT_OBJECT_0 + 2) {
-				blog(LOG_INFO, "%s indicated it wanted to disconnect", source->get_id());
+				blog(LOG_INFO, "%x indicated it wanted to disconnect", source->get_id());
 				blog(LOG_INFO, "%s closing", thread_name.c_str());
+				delete pair;
 				return 0;
 			}
 			else if (waitResult == WAIT_ABANDONED_0) {
 				blog(LOG_INFO, "a mutex for %s was abandoned while listening to", thread_name.c_str(), device->device_index);
 				blog(LOG_INFO, "%s closing", thread_name.c_str());
+				delete pair;
 				return 0;
 			}
 			else if (waitResult == WAIT_ABANDONED_0 + 1) {
 				blog(LOG_INFO, "a mutex for %s was abandoned while listening to", thread_name.c_str(), device->device_index);
 				blog(LOG_INFO, "%s closing", thread_name.c_str());
+				delete pair;
 				return 0;
 			}
 			else if (waitResult == WAIT_ABANDONED_0 + 2) {
 				blog(LOG_INFO, "a mutex for %s was abandoned while listening to", thread_name.c_str(), device->device_index);
 				blog(LOG_INFO, "%s closing", thread_name.c_str());
+				delete pair;
 				return 0;
 			}
 			else if (waitResult == WAIT_TIMEOUT) {
 				blog(LOG_INFO, "%s timed out while listening to %l", thread_name.c_str(), device->device_index);
 				blog(LOG_INFO, "%s closing", thread_name.c_str());
+				delete pair;
 				return 0;
 			}
 			else if (waitResult == WAIT_FAILED) {
 				blog(LOG_INFO, "listener thread wait %lu failed with 0x%x", device->device_index, GetLastError());
 				blog(LOG_INFO, "%s closing", thread_name.c_str());
+				delete pair;
 				return 0;
 			}
 			else {
 				blog(LOG_INFO, "unexpected wait result = %i", waitResult);
 				blog(LOG_INFO, "%s closing", thread_name.c_str());
+				delete pair;
 				return 0;
 			}
 
 		}
-
+		delete pair;
 		return 0;
 	}
 
@@ -705,7 +739,7 @@ public:
 
 		parameters->asio_listener = listener;
 		parameters->device = this;
-		blog(LOG_INFO, "disconnecting any previous connections (source_id: %s)", listener->get_id());
+		blog(LOG_INFO, "disconnecting any previous connections (source_id: %x)", listener->get_id());
 		listener->disconnect();
 		//CloseHandle(listener->captureThread);
 		blog(LOG_INFO, "adding listener for %lu (source: %lu)", device_index, listener->device_index);
@@ -893,6 +927,7 @@ static bool fill_out_sample_rates(obs_properties_t *props, obs_property_t *list,
 		char* cstr = new char[rate.length() + 1];
 		strcpy(cstr, rate.c_str());
 		obs_property_list_add_int(list, cstr, 44100);
+		delete cstr;
 	}
 	else {
 		blog(LOG_INFO, "Device loaded does not support 44100 Hz sample rate\n");
@@ -903,6 +938,7 @@ static bool fill_out_sample_rates(obs_properties_t *props, obs_property_t *list,
 		char* cstr = new char[rate.length() + 1];
 		strcpy(cstr, rate.c_str());
 		obs_property_list_add_int(list, cstr, 48000);
+		delete cstr;
 	}
 	else {
 		blog(LOG_INFO, "Device loaded does not support 48000 Hz sample rate\n");
@@ -978,7 +1014,7 @@ static bool fill_out_buffer_sizes(obs_properties_t *props, obs_property_t *list,
 	obs_property_list_clear(list);
 
 	if (info.bufgran == -1) {
-		size_t gran_buffer = info.bufmin;
+		long long gran_buffer = info.bufmin;
 		while (gran_buffer <= info.bufmax) {
 			int n = snprintf(NULL, 0, "%llu%s", gran_buffer, (gran_buffer == info.bufpref ? " (preferred)" : ""));
 			if (n <= 0) {
@@ -986,7 +1022,7 @@ static bool fill_out_buffer_sizes(obs_properties_t *props, obs_property_t *list,
 				gran_buffer *= 2;
 				continue;
 			}
-			char * buf = (char*)malloc((n + 1) * sizeof(char));
+			char * buf = (char*)bmalloc((n + 1) * sizeof(char));
 			if (!buf) {
 				//problem...continuing on the loop
 				gran_buffer *= 2;
@@ -995,17 +1031,18 @@ static bool fill_out_buffer_sizes(obs_properties_t *props, obs_property_t *list,
 			int c = snprintf(buf, n + 1, "%llu%s", gran_buffer, (gran_buffer == info.bufpref ? " (preferred)" : ""));
 			buf[n] = '\0';
 			obs_property_list_add_int(list, buf, gran_buffer);
-			free(buf);
+			bfree(buf);
 			gran_buffer *= 2;
 		}
 	}
 	else if (info.bufgran == 0) {
 		size_t gran_buffer = info.bufmin;
 		int n = snprintf(NULL, 0, "%llu%s", gran_buffer, (gran_buffer == info.bufpref ? " (preferred)" : ""));
-		char * buf = (char*)malloc((n + 1) * sizeof(char));
+		char * buf = (char*)bmalloc((n + 1) * sizeof(char));
 		int c = snprintf(buf, n + 1, "%llu%s", gran_buffer, (gran_buffer == info.bufpref ? " (preferred)" : ""));
 		buf[n] = '\0';
 		obs_property_list_add_int(list, buf, gran_buffer);
+		bfree(buf);
 	} else if (info.bufgran > 0) {
 		size_t gran_buffer = info.bufmin;
 		while (gran_buffer <= info.bufmax) {
@@ -1015,7 +1052,7 @@ static bool fill_out_buffer_sizes(obs_properties_t *props, obs_property_t *list,
 				gran_buffer += info.bufgran;
 				continue;
 			}
-			char * buf = (char*)malloc((n + 1) * sizeof(char));
+			char * buf = (char*)bmalloc((n + 1) * sizeof(char));
 			if (!buf) {
 				//problem...continuing on the loop
 				gran_buffer += info.bufgran;
@@ -1024,7 +1061,7 @@ static bool fill_out_buffer_sizes(obs_properties_t *props, obs_property_t *list,
 			int c = snprintf(buf, n + 1, "%llu%s", gran_buffer, (gran_buffer == info.bufpref ? " (preferred)" : ""));
 			buf[n] = '\0';
 			obs_property_list_add_int(list, buf, gran_buffer);
-			free(buf);
+			bfree(buf);
 			gran_buffer += info.bufgran;
 		}
 	}
@@ -1338,6 +1375,7 @@ void asio_destroy(void *vptr)
 {
 	struct asio_data *data = (asio_data *)vptr;
 	if (data) {
+		bfree((void*)data->device);
 		if (data->device_index < device_list.size()) {
 			device_data *device = device_list[data->device_index];
 			//send disconnect event
@@ -1613,6 +1651,6 @@ void obs_module_unload(void){
 		BASS_ASIO_Stop();
 		BASS_ASIO_Free();
 		//clear buffers
-		//delete device_list[i];
+		delete device_list[i];
 	}
 }
