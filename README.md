@@ -13,7 +13,7 @@ We developped a plugin for [OBS-Studio](https://obsproject.com/) which is a lead
 It allows capture of ASIO sound devices, which are often professional or semi-professional grade hardware for studio or home-studio use. The plugin is designed for Windows and has been tested on windows 10 x64.    
 There are three versions but only one is released. They can be found on branches asiobass, asioportaudio, asiort of this repo.    
 They use different audio API to host asio drivers (namely Bassasio, Portaudio and RtAudio).    
-The Bassasio plugin has the most functionalities; it allows multi-device as well as mutli-client operation.    
+The Bassasio plugin has the most functionalities; it allows multi-device as well as multi-client operation.    
 The Portaudio plugin has multi-client but not multi-device capability.    
 Multi-device capability means several asio devices can be used at the same time with Obs-Studio. This is a rare feature because normally Asio sdk prevents this.    
 Multi-client capability means obs can create several asio sources with different channel selections from the same device.    
@@ -22,9 +22,9 @@ Multi-client capability means obs can create several asio sources with different
 Check the Releases section [here](https://github.com/pkviet/obs-asio/releases).  
 The binaries released were built with our Portaudio fork which implements asio through a GPL v2+ sdk:  
 [https://github.com/pkviet/portaudio/tree/openasio/openasio_sdk](https://github.com/pkviet/portaudio/tree/openasio/openasio_sdk).  
-The binaries are therefore licensed under GPL v2.  
+The binaries are therefore licensed under GPL v2+.  
 The plugin based on bassasio can not however be released due to the licensing terms of bassasio library which are incompatible with GPL.  
-We have the project to extend our openAsio sdk to enable mutli-devices support. Those interested in contributing can contact us.  
+We have the project to extend our openAsio sdk to enable multi-devices support. Those interested in contributing can contact us.  
 
 ## Screenshots ##
 Main window of OBS-Studio with an 8 channel ASIO source    
@@ -49,7 +49,7 @@ and lastly one relying on [Portaudio library](http://portaudio.com/) which is fr
 This means a single ASIO source can be created in OBS. Duplication of the source however is still possible.  
 * Portaudio plugin (released):  due to ASIO sdk limitations it is not possible to load more than one ASIO driver at a time.  
 But several sources can be created with different channel selections.  
-* Bassasio plugin: the Bassasio library is able to bypass the ASIO sdk limitations. As a result several ASIO device can be used at the same time.  
+* Bassasio plugin: the Bassasio library is able to bypass the ASIO sdk limitations. As a result several ASIO devices can be used at the same time.  
 Additionally, it is possible to create several ASIO sources from the same device with different channel selections (not duplicates).
 
 Due to superiour capabilities we advise the use of the bassasio plugin if you are able to compile. 
@@ -58,7 +58,7 @@ Due to superiour capabilities we advise the use of the bassasio plugin if you ar
 
 #### Prerequisites: ####   
 
-* Microsoft Visual Studio (tested on VS Community 2015 but 2013 or 2017 should work).    
+* Microsoft Visual Studio (tested on VS Community 2015 and 2017 but 2013 should work).    
 * cmake-gui (optional but handy).    
 * Download bassasio dll and lib from [Bassasio website](https://www.un4seen.com/download.php?bassasio13).    
 (Be careful there are x86 and x64 versions of the dll and lib ; pick the versions according to your OBS-Studio binary.)    
