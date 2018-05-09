@@ -51,7 +51,7 @@ Portaudio plugin v2 has a device selector in Tools menu:
 ![Device selection plugin v2](/images/port1.jpg)
 
 Portaudio plugin v2 source setup:    
-![Device settings plugin v2](/images/port2.jpg)
+![Device settings plugin v2](/images/port2.png)
 
 ## How to compile and install the plugin ##
 
