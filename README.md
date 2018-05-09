@@ -11,10 +11,12 @@ Audio Stream Input/Output (ASIO) is a computer sound card driver protocol for di
 ## This plugin ##
 We developped a plugin for [OBS-Studio](https://obsproject.com/) which is a leading open-source streaming and compositing software.
 It allows capture of ASIO sound devices, which are often professional or semi-professional grade hardware for studio or home-studio use. The plugin is designed for Windows and has been tested on windows 10 x64.    
-There are three versions but only one is released. They can be found on branches asiobass, asioportaudio, asiort of this repo.    
+There are four versions but only two are released. They can be found on branches asiobass, asioportaudio, asioportaudio_v2, asiort of this repo.    
 They use different audio API to host asio drivers (namely Bassasio, Portaudio and RtAudio).    
 The Bassasio plugin has the most functionalities; it allows multi-device as well as multi-client operation.    
-The Portaudio plugin has multi-client but not multi-device capability.    
+The 2 Portaudio plugins have multi-client but not multi-device capability.
+The portaudio plugin v2 differs from portaudio plugin v1 in allowing sources with different devices although only one device is active.    
+The rtaudio based plugin is the most basic one and is not released.     
 Multi-device capability means several asio devices can be used at the same time with Obs-Studio. This is a rare feature because normally Asio sdk prevents this.    
 Multi-client capability means obs can create several asio sources with different channel selections from the same device.    
 
@@ -26,8 +28,14 @@ The binaries are therefore licensed under GPL v2+.
 The plugin based on bassasio can not however be released due to the licensing terms of bassasio library which are incompatible with GPL.  
 We have the project to extend our openAsio sdk to enable multi-devices support. Those interested in contributing can contact us.  
 
-## Screenshots ##
-Main window of OBS-Studio with an 8 channel ASIO source    
+## Screenshots and How to use##
+The use is straightforward : select an **Asio Input** source in Obs-Studio Source Panel.    
+Select your device input channels which will be captured by Obs.    
+Select sample rate, audio sample bitdepth, buffer.    
+**Important:** make sure the settings selected are those of your device as set in the Device Asio Control Panel (from its maker).    
+The settings set in obs MUST reflect those or the plugin won't work.    
+
+Main window of OBS-Studio with an 8 channel ASIO source (bassasio, portaudio v1 , rtaudio plugins)    
 ![Main window of OBS-Studio with an 8 channel ASIO source.](/images/asio1.jpg) 
 
 ASIO Config Panel    
@@ -38,6 +46,12 @@ Channel Routing: the channels can be swapped in any order.
 
 Sample Rate selection    
 ![Sample Rate selection](/images/asio4medium.jpg)
+
+Portaudio plugin v2 has a device selector in Tools menu:     
+![Device selection plugin v2](/images/port1.jpg)
+
+Portaudio plugin v2 source setup:    
+![Device settings plugin v2](/images/port2.jpg)
 
 ## How to compile and install the plugin ##
 
