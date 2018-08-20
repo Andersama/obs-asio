@@ -64,13 +64,18 @@ set(obs-asio-sdk_HEADERS
 
 set(obs-asio_HEADERS
 	src/circle-buffer.h
+	src/asioselector.h
 	)
 
 set(obs-asio_SOURCES
 	src/asio-input.cpp
+	src/asioselector.cpp
 )
 set(obs-asio_QRC
 	src/asio-input.qrc)
+
+set(obs-asio_UI
+	src/asioselector.ui)
 
 qt5_add_resources(obs-asio_QRC_SOURCES ${obs-asio_QRC})
 
