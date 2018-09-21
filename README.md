@@ -51,6 +51,8 @@ Sample Rate selection
 Portaudio plugin v2 has a device selector in Tools menu:     
 ![Device selection plugin v2](/images/port1.jpg)
 
+![Device selection gui v2](/images/obs64_2018-09-21_05-09-35.png)
+
 Portaudio plugin v2 source setup:    
 ![Device settings plugin v2](/images/port2.png)
 
