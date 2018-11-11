@@ -49,7 +49,6 @@ public:
 	/*asio device and info */
 	char * device_name;
 	uint8_t device_index;
-	int listener_index;			// this is the index of this listener in the listener global vector
 	uint64_t first_ts;			//first timestamp
 
 	/* channels info */
@@ -109,8 +108,12 @@ public:
 		SetEvent(stop_listening_signal);
 		if (captureThread.Valid()) {
 			WaitForSingleObject(captureThread, INFINITE);
+			//CloseHandle(captureThread);
 		}
 		ResetEvent(stop_listening_signal);
+		//if (this->parameters) {
+		//	delete this->parameters;
+		//}
 
 		return true;
 	}
@@ -306,6 +309,7 @@ public:
 	}
 
 	~device_buffer() {
+		//free resources?
 		if (all_prepped) {
 			delete receive_signals;
 			for (int i = 0; i < buffer_count; i++) {
@@ -415,13 +419,13 @@ public:
 					if (!buffer_prepped) {
 						_source_audio->data[j] = (uint8_t*)bzalloc(buffer_size);
 					} else if (reallocate_buffer) {
-						uint8_t* tmp = (uint8_t*)realloc(_source_audio->data[j], buffer_size);
+						uint8_t* tmp = (uint8_t*)brealloc(_source_audio->data[j], buffer_size);
 						if (tmp == NULL) {
 							buffer_prepped = false;
 							all_prepped = false;
 							return;
 						} else if (tmp == _source_audio->data[j]) {
-							free(tmp);
+							bfree(tmp);
 							tmp = NULL;
 						} else {
 							_source_audio->data[j] = tmp;
@@ -452,6 +456,8 @@ public:
 		size_t ch_buffer_size = BufSize / device_options.channel_count; //info.inputs;
 		if (ch_buffer_size > buffer_size) {
 			blog(LOG_WARNING, "%s device needs to reallocate memory");
+			buffer_size = ch_buffer_size;
+			re_prep_buffers();
 		}
 		int byte_depth = bytedepth_format(format);
 		size_t interleaved_frame_size = device_options.channel_count * byte_depth; //info.inputs
@@ -496,7 +502,9 @@ public:
 		uint8_t ** input_buffer = (uint8_t**)buffer;
 		size_t ch_buffer_size = BufSize / device_options.channel_count; //info.inputs;
 		if (ch_buffer_size > buffer_size) {
-			blog(LOG_WARNING, "%s device needs to reallocate memory");
+			blog(LOG_WARNING, "%s device needs to reallocate memory %ui to %ui", buffer_size, 2 * ch_buffer_size);
+			buffer_size = 2 * ch_buffer_size;
+			re_prep_buffers();
 		}
 		int byte_depth = bytedepth_format(format);
 		size_t interleaved_frame_size = device_options.channel_count * byte_depth; //info.inputs
@@ -513,8 +521,14 @@ public:
 
 		audio_format planar_format = get_planar_format(format);
 		//deinterleave directly into buffer (planar)
-		for (size_t j = 0; j < device_options.channel_count; j++) {
-			memcpy(_source_audio->data[j], input_buffer[j], ch_buffer_size);		
+		if (input_buffer) {
+			for (size_t j = 0; j < device_options.channel_count; j++) {
+				memcpy(_source_audio->data[j], input_buffer[j], ch_buffer_size);
+			}
+		} else {
+			for (size_t j = 0; j < device_options.channel_count; j++) {
+				memset(_source_audio->data[j], 0, ch_buffer_size);
+			}
 		}
 
 		_source_audio->format = planar_format;
@@ -585,6 +599,10 @@ public:
 					delete pair;
 					return 0;
 				}
+				//uint64_t t_stamp = os_gettime_ns();
+				//os_sleepto_ns(t_stamp + buffer_time);
+				//os_sleepto_ns(os_gettime_ns() + ((device->frames * NSEC_PER_SEC) / device->samples_per_sec));
+				//Sleep(1);
 				//microsoft docs on the return codes gives the impression that you're supposed to subtract wait_object_0
 			} else if (waitResult == WAIT_OBJECT_0 + 1) {
 				blog(LOG_INFO, "device %l indicated it wanted to disconnect", device->device_index);
@@ -651,10 +669,10 @@ public:
 
 		parameters->asio_listener = listener;
 		parameters->device = this;
-
+//		listener->parameters = parameters;
 		blog(LOG_INFO, "disconnecting any previous connections (source_id: %x)", listener->get_id());
 		listener->disconnect();
-
+		//CloseHandle(listener->captureThread);
 		blog(LOG_INFO, "adding listener for %lu (source: %lu)", device_index, listener->device_index);
 		listener->captureThread = CreateThread(nullptr, 0, this->capture_thread, parameters, 0, nullptr);
 	}
@@ -671,7 +689,7 @@ void add_listener_to_device(asio_listener *listener, device_buffer *buffer) {
 	parameters->device = buffer;
 	blog(LOG_INFO, "disconnecting any previous connections (source_id: %s)", listener->get_id());
 	listener->disconnect();
-
+	//CloseHandle(listener->captureThread);
 	blog(LOG_INFO, "adding listener for %lu (source: %lu)", buffer->device_index, listener->device_index);
 	listener->captureThread = CreateThread(nullptr, 0, buffer->capture_thread, parameters, 0, nullptr);
 }
