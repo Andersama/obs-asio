@@ -843,7 +843,7 @@ static bool fill_out_channels_modified(obs_properties_t *props, obs_property_t *
 	// DEBUG: check that the current device in bass thread is the correct one
 	// once code is fine the check can be removed
 	const char* device = obs_data_get_string(settings, "device_id");
-	if (ret && !strcmp(device, devinfo.name)) {
+	if (ret && strcmp(device, devinfo.name) != 0) {
 		blog(LOG_ERROR, "Device loaded is not the one in settings\n");
 	}
 	//get the device info
@@ -876,7 +876,7 @@ static bool fill_out_sample_rates(obs_properties_t *props, obs_property_t *list,
 	// DEBUG: check that the current device in bass thread is the correct one
 	// once code is fine the check can be removed
 	const char* device = obs_data_get_string(settings, "device_id");
-	if (ret && !strcmp(device, devinfo.name)) {
+	if (ret && strcmp(device, devinfo.name) != 0) {
 		blog(LOG_ERROR, "Device loaded is not the one in settings\n");
 	}
 
@@ -921,7 +921,7 @@ static bool fill_out_bit_depths(obs_properties_t *props, obs_property_t *list, o
 	// DEBUG: check that the current device in bass thread is the correct one
 	// once code is fine the check can be removed
 	const char* device = obs_data_get_string(settings, "device_id");
-	if (ret && !strcmp(device, devinfo.name)) {
+	if (ret && strcmp(device, devinfo.name) != 0) {
 		blog(LOG_ERROR, "Device loaded is not the one in settings\n");
 	}
 
@@ -1179,7 +1179,7 @@ void CALLBACK asio_device_setting_changed(DWORD notify, void *device_ptr) {
 					break;
 				case BASS_ERROR_ALREADY:
 					blog(LOG_ERROR, "Error: device already started\n");
-					//BASS_ASIO_Stop(); 
+					//BASS_ASIO_Stop();
 					//BASS_ASIO_Start(data->BufferSize, recorded_channels);
 					break;
 				case BASS_ERROR_NOCHAN:
@@ -1451,7 +1451,7 @@ void asio_update(void *vptr, obs_data_t *settings)
 		BASS_ASIO_DEVICEINFO devinfo;
 		int index = BASS_ASIO_GetDevice();
 		ret = BASS_ASIO_GetDeviceInfo(index, &devinfo);
-		if (!strcmp(device, devinfo.name)) {
+		if (strcmp(device, devinfo.name) != 0) {
 			blog(LOG_ERROR, "Device loaded is not the one in settings\n");
 			goto fail;
 		}
