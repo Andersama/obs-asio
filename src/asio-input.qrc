@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/res">
+        <file>images/asiologo.png</file>
+        <file>images/btn_donate_SM.gif</file>
+    </qresource>
+</RCC>
