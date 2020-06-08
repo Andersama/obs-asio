@@ -1,17 +1,14 @@
 /*
 Copyright (C) 2019 by andersama <anderson.john.alexander@gmail.com>
 and pkv <pkv.stream@gmail.com>.
-
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 2 of the License, or
 (at your option) any later version.
-
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
-
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -452,7 +449,7 @@ public:
 		UNUSED_PARAMETER(data);
 		QMainWindow *main_window = (QMainWindow *)obs_frontend_get_main_window();
 		QMessageBox  mybox(main_window);
-		QString      text = "v.2.0.2\r\n © 2019, license GPL v3\r\n"
+		QString      text = "v.2.0.2\r\n © 2020, license GPL v3\r\n"
 			       "Based on Juce library\r\n\r\n"
 			       "Authors:\r\n"
 			       "Andersama (main author) & pkv\r\n";
@@ -639,7 +636,7 @@ public:
 	static const char *Name(void *unused)
 	{
 		UNUSED_PARAMETER(unused);
-		return obs_module_text("ASIO");
+		return obs_module_text("ASIO Input Capture");
 	}
 };
 
@@ -809,13 +806,14 @@ bool obs_module_load(void)
 	struct obs_source_info asio_input_capture = {};
 	asio_input_capture.id                     = "asio_input_capture";
 	asio_input_capture.type                   = OBS_SOURCE_TYPE_INPUT;
-	asio_input_capture.output_flags           = OBS_SOURCE_AUDIO;
+	asio_input_capture.output_flags           = OBS_SOURCE_AUDIO | OBS_SOURCE_DO_NOT_DUPLICATE;
 	asio_input_capture.create                 = ASIOPlugin::Create;
 	asio_input_capture.destroy                = ASIOPlugin::Destroy;
 	asio_input_capture.update                 = ASIOPlugin::Update;
 	asio_input_capture.get_defaults           = ASIOPlugin::Defaults;
 	asio_input_capture.get_name               = ASIOPlugin::Name;
 	asio_input_capture.get_properties         = ASIOPlugin::Properties;
+	asio_input_capture.icon_type              = OBS_ICON_TYPE_AUDIO_INPUT;
 
 	obs_register_source(&asio_input_capture);
 	return true;
