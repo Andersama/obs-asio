@@ -426,6 +426,7 @@ public:
 			if (cb)
 				cb->remove_client(_listener);
 			delete _listener;
+			_listener = nullptr;
 		}
 	}
 
