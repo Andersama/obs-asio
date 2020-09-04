@@ -836,7 +836,8 @@ void obs_module_unload(void)
 		}
 		device = nullptr;
 		delete cb;
+		callbacks[i] = nullptr;
 	}
-
+	callbacks.clear();
 	delete deviceTypeAsio;
 }
