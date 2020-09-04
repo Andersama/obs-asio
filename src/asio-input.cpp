@@ -420,11 +420,13 @@ public:
 
 	ASIOPlugin::~ASIOPlugin()
 	{
-		AudioCB *cb = _listener->getCallback();
-		_listener->disconnect();
-		if (cb)
-			cb->remove_client(_listener);
-		delete _listener;
+		if (_listener) {
+			AudioCB *cb = _listener->getCallback();
+			_listener->disconnect();
+			if (cb)
+				cb->remove_client(_listener);
+			delete _listener;
+		}
 	}
 
 	static void *Create(obs_data_t *settings, obs_source_t *source)
