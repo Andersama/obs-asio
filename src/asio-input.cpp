@@ -452,7 +452,7 @@ public:
 		UNUSED_PARAMETER(data);
 		QMainWindow *main_window = (QMainWindow *)obs_frontend_get_main_window();
 		QMessageBox  mybox(main_window);
-		QString      text = "v.2.0.2\r\n © 2020, license GPL v3\r\n"
+		QString      text = "v.2.0.3\r\n © 2020, license GPL v3\r\n"
 			       "Based on Juce library\r\n\r\n"
 			       "Authors:\r\n"
 			       "Andersama (main author) & pkv\r\n";
