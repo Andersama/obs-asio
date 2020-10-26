@@ -840,4 +840,5 @@ void obs_module_unload(void)
 	}
 	callbacks.clear();
 	delete deviceTypeAsio;
+	MessageManager::deleteInstance();
 }
