@@ -44,6 +44,7 @@ static juce::AudioIODeviceType *deviceTypeAsio = AudioIODeviceType::createAudioI
 
 class ASIOPlugin;
 class AudioCB;
+TimeSliceThread *global_thread;
 
 static bool asio_device_changed(void *vptr, obs_properties_t *props, obs_property_t *list, obs_data_t *settings);
 static bool asio_layout_changed(obs_properties_t *props, obs_property_t *list, obs_data_t *settings);
@@ -330,7 +331,7 @@ public:
 	void add_client(AudioListener *client)
 	{
 		if (!_thread)
-			_thread = new TimeSliceThread("");
+			_thread = global_thread;
 
 		client->setCurrentCallback(this);
 		client->setReadIndex(_write_index);
@@ -370,17 +371,15 @@ public:
 		}
 
 		if (!_thread) {
-			_thread = new TimeSliceThread(name);
-			_thread->startThread();
+			_thread = global_thread;
 		} else {
 			for (int i = 0; i < _thread->getNumClients(); i++) {
 				AudioListener *l = static_cast<AudioListener *>(_thread->getClient(i));
 				l->setCurrentCallback(this);
 			}
-			_thread->setCurrentThreadName(name);
-			if (!_thread->isThreadRunning())
-				_thread->startThread();
 		}
+		if (!_thread->isThreadRunning())
+			_thread->startThread(10);
 	}
 
 	void audioDeviceStopped()
@@ -795,7 +794,7 @@ bool obs_module_load(void)
 	obs_get_audio_info(&aoi);
 
 	MessageManager::getInstance();
-
+	global_thread = new TimeSliceThread("global");
 	deviceTypeAsio->scanForDevices();
 	StringArray deviceNames(deviceTypeAsio->getDeviceNames());
 	for (int j = 0; j < deviceNames.size(); j++) {
@@ -841,4 +840,7 @@ void obs_module_unload(void)
 	callbacks.clear();
 	delete deviceTypeAsio;
 	MessageManager::deleteInstance();
+	if (!global_thread->stopThread(200))
+		blog(LOG_ERROR, "win-asio: Thread had to be force-stopped");
+	delete global_thread;
 }
