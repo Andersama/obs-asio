@@ -2,17 +2,23 @@ cmake_minimum_required(VERSION 3.5)
 
 project(obs-asio)
 
-# in cmake gui set the following:
-# BASS_ASIO_LIB == path of bassasio.lib
-# BASS_ASIO_INCLUDE_DIR == path of bassasio.h
-# put also bassasio.dll in obs-plugins/bin folder
-# be careful there are two versions of the lib and dll (x86 and x64)
+# Retrieve obassasio.dll from https://www.un4seen.com/download.php?bassasio14
+# Put also bassasio.dll in obs-plugins/64bit folder.
+# Be careful there are two versions of dll (x86 and x64)
 
 ##########################################
 # find libobs                            #
 ##########################################
 include(external/FindLibObs.cmake)
 find_package(LibObs REQUIRED)
+##########################################
+# QT support                             #
+##########################################
+set(CMAKE_PREFIX_PATH "${QTDIR}")
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+find_package(Qt5 REQUIRED Core Widgets)
 
 ##########################################
 # set architecture                       #
@@ -31,24 +37,13 @@ else()
 	set(OBS_BUILDDIR_ARCH "build32")
 endif()
 
-
-##########################################
-# QT support                             #
-##########################################
-# Find includes in corresponding build directories
-#set(CMAKE_INCLUDE_CURRENT_DIR ON)
-# Instruct CMake to run moc automatically when needed.
-#set(CMAKE_AUTOMOC ON)
-
-# Find the QtWidgets library
-#find_package(Qt5Widgets)
-
-
 include_directories(
-#	SYSTEM "${CMAKE_SOURCE_DIR}/libobs"
-	${BASS_ASIO_INCLUDE_DIR}
+	"${LIBOBS_INCLUDE_DIR}/../UI/obs-frontend-api"
+	${Qt5Core_INCLUDES}
+	${Qt5Widgets_INCLUDES}
 )
 set(obs-asio-sdk_HEADERS
+	src/bassasio-loader.h
 	)
 
 set(obs-asio_HEADERS
@@ -65,7 +60,8 @@ add_library(obs-asio MODULE
 )
 target_link_libraries(obs-asio
 	libobs
-	${BASS_ASIO_LIB}
+	Qt5::Core
+	Qt5::Widgets
 )
 
 #install_obs_plugin_with_data(win-asio data) ==> internal plugin install
