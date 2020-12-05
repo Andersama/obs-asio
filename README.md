@@ -29,7 +29,7 @@ Audio Stream Input/Output (ASIO) is a computer sound card driver protocol for di
 
 ## Installation and Usage ##
 
-[Check the wiki](https://github.com/Andersama/obs-asio/wiki/Installation-and-Usage-(new-versions-2.0.0-or-later)) 
+[Check the wiki](https://github.com/Andersama/obs-asio/wiki) 
 ## How to compile and install the plugin ##
 
-[Check the wiki](https://github.com/Andersama/obs-asio/wiki/Compilation-instructions)
+[Check the wiki](https://github.com/Andersama/obs-asio/wiki)
