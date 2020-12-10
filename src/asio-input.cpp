@@ -608,12 +608,12 @@ public:
 		int waitResult;
 
 		uint64_t buffer_time = ((device->frames * NSEC_PER_SEC) / device->samples_per_sec);
-
+		DWORD wait_time = DWORD((buffer_time / 1000000L) * 2);
 		while (source && device) {
-			waitResult = WaitForMultipleObjects(3, signals_1, false, INFINITE);
-			waitResult = WaitForMultipleObjects(3, signals_2, false, INFINITE);
+			waitResult = WaitForMultipleObjects(3, signals_1, false, wait_time);
+			waitResult = WaitForMultipleObjects(3, signals_2, false, wait_time);
 			//not entirely sure that all of these conditions are correct (at the very least this is)
-			if (waitResult == WAIT_OBJECT_0) {
+			if (waitResult == WAIT_OBJECT_0 || waitResult == WAIT_TIMEOUT) {
 				while (read_index != device->write_index) {
 					device_source_audio* in = device->get_source_audio(read_index);//device->get_writeable_source_audio();
 					source->render_audio(in, route);
@@ -653,11 +653,6 @@ public:
 				return 0;
 			} else if (waitResult == WAIT_ABANDONED_0 + 2) {
 				blog(LOG_INFO, "a mutex for %s was abandoned while listening to", thread_name.c_str(), device->device_index);
-				blog(LOG_INFO, "%s closing", thread_name.c_str());
-				delete pair;
-				return 0;
-			} else if (waitResult == WAIT_TIMEOUT) {
-				blog(LOG_INFO, "%s timed out while listening to %l", thread_name.c_str(), device->device_index);
 				blog(LOG_INFO, "%s closing", thread_name.c_str());
 				delete pair;
 				return 0;
