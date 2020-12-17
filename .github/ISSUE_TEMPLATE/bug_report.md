@@ -20,6 +20,8 @@ Before posting an Issue, make sure that:
 - you've read the wiki especially the Install and Usage section, the Troubleshooting section, the Capturing mixes section.
 - you've researched the issues to find if there aren't similar issues which have been posted already.
 - have an obs log ready (obs-studio : help menu > log > see current log)
+**Plugin Version**
+Which release of the plugin are you using?
 
 **Describe the bug**
 A clear and concise description of what the bug is.
