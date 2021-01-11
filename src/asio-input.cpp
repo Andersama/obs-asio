@@ -184,6 +184,8 @@ public:
 	uint8_t device_index;
 
 	uint64_t first_ts;       //first timestamp
+	uint32_t retry_limit;
+	bool device_timeout;
 
 	/* channels info */
 	DWORD input_channels; //total number of input channels
@@ -215,6 +217,8 @@ public:
 	}
 
 	asio_data() : source(NULL), first_ts(0), device_index(-1) {
+		device_timeout = false;
+		retry_limit = 0;
 		InitializeCriticalSection(&settings_mutex);
 		memset(&route[0], -1, sizeof(long) * 8);
 		stop_listening_signal = CreateEvent(nullptr, true, false, nullptr);
@@ -235,7 +239,7 @@ public:
 		return true;
 	}
 
-	bool render_audio(device_source_audio *asio_buffer, long route[]) {
+	bool render_audio(device_source_audio *asio_buffer, long route[], bool force_silent) {
 
 		struct obs_audio_info aoi;
 		obs_get_audio_info(&aoi);
@@ -276,7 +280,7 @@ public:
 		}
 
 		for (short i = 0; i < aoi.speakers; i++) {
-			if (route[i] >= 0 && route[i] < asio_buffer->input_chs) {
+			if (route[i] >= 0 && route[i] < asio_buffer->input_chs && !force_silent) {
 				out.data[i] = asio_buffer->data[route[i]];
 			} else if (route[i] == -1) {
 				out.data[i] = silent_buffer;
@@ -343,6 +347,7 @@ private:
 	circlebuf audio_buffer;
 public:
 	uint32_t samples_per_sec;
+	uint32_t retry_count;
 
 	const WinHandle * get_handles() {
 		return receive_signals;
@@ -379,6 +384,7 @@ public:
 		format = AUDIO_FORMAT_UNKNOWN;
 		write_index = 0;
 		buffer_count = 32;
+		retry_count = 0;
 
 		all_received_signal = CreateEvent(nullptr, true, false, nullptr);
 		all_received_signal_2 = CreateEvent(nullptr, true, true, nullptr);
@@ -395,6 +401,7 @@ public:
 		format = audioformat;
 		write_index = 0;
 		buffer_count = buffers ? buffers : 32;
+		retry_count = 0;
 
 		all_received_signal = CreateEvent(nullptr, true, false, nullptr);
 		all_received_signal_2 = CreateEvent(nullptr, true, true, nullptr);
@@ -608,15 +615,31 @@ public:
 		int waitResult;
 
 		uint64_t buffer_time = ((device->frames * NSEC_PER_SEC) / device->samples_per_sec);
-
+		DWORD wait_time = DWORD((buffer_time / 1000000L) * 8);
+		blog(LOG_INFO, "device %lu wait_time=%d", device->device_index, wait_time);
 		while (source && device) {
-			waitResult = WaitForMultipleObjects(3, signals_1, false, INFINITE);
-			waitResult = WaitForMultipleObjects(3, signals_2, false, INFINITE);
+			DWORD ms = source->device_timeout ? wait_time : INFINITE;
+			waitResult = WaitForMultipleObjects(3, signals_1, false, ms);
+			waitResult = WaitForMultipleObjects(3, signals_2, false, ms);
 			//not entirely sure that all of these conditions are correct (at the very least this is)
-			if (waitResult == WAIT_OBJECT_0) {
+			if (waitResult == WAIT_OBJECT_0 || waitResult == WAIT_TIMEOUT) {
+				if (waitResult == WAIT_TIMEOUT) {
+					// In case of timeout increment the retry_count
+					device->retry_count++;
+					if (source->retry_limit != -1 && device->retry_count > source->retry_limit) {
+						// We reached our retry_limit :(
+						blog(LOG_INFO, "%s closing due to timeout, device %lu WAIT_TIMEOUT retry_count=%u retry_limit=%u", thread_name.c_str(), device->device_index, device->retry_count, source->retry_limit);
+						delete pair;
+						return 0;
+					}
+				} else if (device->retry_count >= 1) {
+					// waitResult is now WAIT_OBJECT_0 after some WAIT_TIMEOUT occurred, reset the retry_count to zero
+					device->retry_count = 0;
+				}
+
 				while (read_index != device->write_index) {
 					device_source_audio* in = device->get_source_audio(read_index);//device->get_writeable_source_audio();
-					source->render_audio(in, route);
+					source->render_audio(in, route, waitResult == WAIT_TIMEOUT);
 					read_index++;
 					read_index = read_index % device->buffer_count;
 				}
@@ -653,11 +676,6 @@ public:
 				return 0;
 			} else if (waitResult == WAIT_ABANDONED_0 + 2) {
 				blog(LOG_INFO, "a mutex for %s was abandoned while listening to", thread_name.c_str(), device->device_index);
-				blog(LOG_INFO, "%s closing", thread_name.c_str());
-				delete pair;
-				return 0;
-			} else if (waitResult == WAIT_TIMEOUT) {
-				blog(LOG_INFO, "%s timed out while listening to %l", thread_name.c_str(), device->device_index);
 				blog(LOG_INFO, "%s closing", thread_name.c_str());
 				delete pair;
 				return 0;
@@ -1197,6 +1215,16 @@ void CALLBACK asio_device_setting_changed(DWORD notify, void *device_ptr) {
 	}
 }
 
+static bool device_timeout_changed(obs_properties_t* props,
+	obs_property_t* list, obs_data_t* settings) {
+	obs_property_t* retry_limit = obs_properties_get(props, "retry limit");
+	bool device_timeout = obs_data_get_bool(settings, "device may timeout");
+
+	obs_property_set_enabled(retry_limit, device_timeout);
+
+	return true;
+}
+
 void asio_init(struct asio_data *data)
 {
 	// get info, useful for debug
@@ -1472,6 +1500,8 @@ void asio_update(void *vptr, obs_data_t *settings)
 
 		data->muted_chs = data->_get_muted_chs(data->route);
 		data->unmuted_chs = data->_get_unmuted_chs(data->route);
+		data->retry_limit = obs_data_get_int(settings, "retry limit");
+		data->device_timeout = obs_data_get_bool(settings, "device may timeout");
 
 		asio_init(data);
 	}
@@ -1491,6 +1521,8 @@ void asio_get_defaults(obs_data_t *settings)
 {
 	obs_data_set_default_int(settings, "sample rate", 48000);
 	obs_data_set_default_int(settings, "bit depth", AUDIO_FORMAT_FLOAT);
+	obs_data_set_default_int(settings, "device may timeout", false);
+	obs_data_set_default_int(settings, "retry limit", 0);
 	DWORD recorded_channels = get_obs_output_channels();
 	for (unsigned int i = 0; i < recorded_channels; i++) {
 		std::string name = "route " + std::to_string(i);
@@ -1505,6 +1537,8 @@ obs_properties_t * asio_get_properties(void *unused)
 	obs_property_t *rate;
 	obs_property_t *bit_depth;
 	obs_property_t *buffer_size;
+	obs_property_t *device_timeout;
+	obs_property_t *retry_limit;
 	obs_property_t *route[MAX_AUDIO_CHANNELS];
 	obs_property_t *console;
 	int pad_digits = (int)floor(log10(abs(MAX_AUDIO_CHANNELS))) + 1;
@@ -1566,6 +1600,17 @@ obs_properties_t * asio_get_properties(void *unused)
 		"256 should be OK for most cards.\n"
 		"Warning: the real buffer returned by the device may differ";
 	obs_property_set_long_description(buffer_size, buffer_descr.c_str());
+
+	device_timeout = obs_properties_add_bool(props, "device may timeout", obs_module_text("DeviceMayTimeout"));
+	std::string device_timeout_descr = "Device May Timeout : Check this if your device has issues starting up / disconnecting. (May solve 'Max audio buffering reached' errors).\n";
+	obs_property_set_long_description(device_timeout, device_timeout_descr.c_str());
+	obs_property_set_modified_callback(device_timeout, device_timeout_changed);
+
+	retry_limit = obs_properties_add_int(props, "retry limit",
+		obs_module_text("RetryLimit"), -1, 65536, 1);
+	std::string retry_limit_descr = "Retry limit : Maximum retries after device timeouts. -1 = infite retries\n";
+	obs_property_set_long_description(retry_limit, retry_limit_descr.c_str());
+	obs_property_set_enabled(retry_limit, false);
 
 	console = obs_properties_add_button(props, "console",
 		obs_module_text("ASIO driver control panel"), DeviceControlPanel);
