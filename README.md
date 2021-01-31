@@ -5,13 +5,6 @@
 
 **Authors** : Andersama (lead) <anderson.john.alexander(a)gmail.com> and pkv <pkv.stream(a)gmail.com>
 
-## Donations
-We invested a lot of our time in making this plugin, which we release free of charge.
-If you find this plugin useful, consider donating. Even one buck is that much going to buy ourselves a burger !
-
-<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=NXB942R9EXY5E&source=url" target="_blank"><img src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" 
-alt="IDonateE"/></a>    
-
 ## What is ASIO ? ##
 Audio Stream Input/Output (ASIO) is a computer sound card driver protocol for digital audio specified by Steinberg, providing a low-latency and high fidelity interface between a software application and a computer's sound card. Whereas Microsoft's DirectSound is commonly used as an intermediary signal path for non-professional users, ASIO allows musicians and sound engineers to access external hardware directly. (From [ASIO Wikipedia article](https://en.wikipedia.org/wiki/Audio_Stream_Input/Output) ).
 
