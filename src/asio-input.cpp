@@ -154,6 +154,7 @@ public:
 	class AudioListener : public TimeSliceClient {
 	private:
 		std::vector<short> _route;
+		std::vector<short> _route_out;
 		obs_source_audio   in;
 		obs_source_t *     source;
 
@@ -264,14 +265,14 @@ public:
 			if (read_index == write_index)
 				return wait_time;
 
-			std::vector<short> route           = _route;
+			_route_out                         = _route;
 			int                sample_rate     = 0;
 			int                max_sample_rate = 1;
 			int                m               = (int)callback->buffers.size();
 
 			while (read_index != write_index) {
 				obs_source_audio out;
-				bool unmuted = set_data(&callback->buffers[read_index], out, route, &sample_rate);
+				bool unmuted = set_data(&callback->buffers[read_index], out, _route_out, &sample_rate);
 				if (unmuted && out.speakers)
 					obs_source_output_audio(source, &out);
 				if (sample_rate > max_sample_rate)
