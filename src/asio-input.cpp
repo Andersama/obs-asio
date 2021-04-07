@@ -265,7 +265,7 @@ public:
 			if (read_index == write_index)
 				return wait_time;
 
-			_route_out                         = _route;
+			_route_out.assign(_route.begin(), _route.end());
 			int                sample_rate     = 0;
 			int                max_sample_rate = 1;
 			int                m               = (int)callback->buffers.size();
