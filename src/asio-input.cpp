@@ -798,6 +798,9 @@ bool obs_module_load(void)
 	global_thread = new TimeSliceThread("global");
 	deviceTypeAsio->scanForDevices();
 	StringArray deviceNames(deviceTypeAsio->getDeviceNames());
+
+	callbacks.reserve(deviceNames.size());
+
 	for (int j = 0; j < deviceNames.size(); j++) {
 		char *name = bstrdup(deviceNames[j].toStdString().c_str());
 
