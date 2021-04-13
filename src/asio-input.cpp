@@ -520,6 +520,8 @@ public:
 			if (n == name) {
 				if (!device) {
 					String deviceName = name.c_str();
+					//rescan devices
+					deviceTypeAsio->scanForDevices();
 					device            = deviceTypeAsio->createDevice(deviceName, deviceName);
 					cb->setDevice(device, name.c_str());
 				}
