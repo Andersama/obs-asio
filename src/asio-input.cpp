@@ -310,6 +310,8 @@ public:
 
 	~AudioCB()
 	{
+		if (_thread)
+			_thread->stopThread(200);
 		bfree(_name);
 	}
 
