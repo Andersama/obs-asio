@@ -11,8 +11,7 @@ Audio Stream Input/Output (ASIO) is a computer sound card driver protocol for di
 ## This plugin ##
 * We developed a plugin for [OBS Studio](https://obsproject.com/) which is a leading open-source streaming and compositing software.
 * It allows capture of ASIO sound devices, which are often professional or semi-professional grade hardware for studio or home-studio use. * The plugin is designed for Windows and has been tested on windows 10 x64.    
-* There are five versions but only two are released. They can be found on branches asio-juce, asiobass, asioportaudio, asioportaudio_v2, asiort of this repo.    
-  * They use different audio API to host asio drivers (namely JUCE, Bassasio, Portaudio and RtAudio).    
+* There are several versions, we'll only be releasing the most stable so far. All code will still be available on their corresponding branches.   
   * The JUCE and Bassasio plugin have the most functionalities; they allow multi-device as well as multi-client operation.    
   * The 2 Portaudio plugins have multi-client but not multi-device capability.
   * The portaudio plugin v2 differs from portaudio plugin v1 in allowing sources with different devices although only one device is active.    
