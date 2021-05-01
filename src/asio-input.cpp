@@ -135,7 +135,7 @@ private:
 	int              _write_index = 0;
 	double           sample_rate;
 	TimeSliceThread *_thread = nullptr;
-
+	uint64_t last_audio_ts = 0;
 public:
 	struct AudioBufferInfo {
 		AudioBuffer<float> buffer;
@@ -325,6 +325,7 @@ public:
 		buffers[_write_index].out.samples_per_sec = (uint32_t)sample_rate;
 		_write_index                              = (_write_index + 1) % buffers.size();
 
+		last_audio_ts = ts;
 		UNUSED_PARAMETER(numOutputChannels);
 		UNUSED_PARAMETER(outputChannelData);
 	}
@@ -386,6 +387,10 @@ public:
 	void audioDeviceStopped()
 	{
 		blog(LOG_INFO, "Stopped (%s)", _device->getName().toStdString().c_str());
+
+		std::string timestamp_string = std::to_string(last_audio_ts);
+		blog(LOG_INFO, "Last Recieved Timestamp (%s)", timestamp_string.c_str());
+		last_audio_ts = 0;
 	}
 
 	void audioDeviceError(const juce::String &errorMessage)
@@ -394,6 +399,10 @@ public:
 			_thread->stopThread(200);
 		std::string error = errorMessage.toStdString();
 		blog(LOG_ERROR, "Device Error!\n%s", error.c_str());
+
+		std::string timestamp_string = std::to_string(last_audio_ts);
+		blog(LOG_INFO, "Last Recieved Timestamp (%s)", timestamp_string.c_str());
+		last_audio_ts = 0;
 	}
 };
 
