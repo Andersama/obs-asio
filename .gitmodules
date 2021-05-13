@@ -1,3 +1,0 @@
-[submodule "deps/rtaudio"]
-	path = deps/rtaudio
-	url = https://github.com/thestk/rtaudio.git
