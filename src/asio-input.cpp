@@ -1551,12 +1551,12 @@ obs_properties_t * asio_get_properties(void *unused)
 		OBS_COMBO_FORMAT_STRING);
 	obs_property_set_modified_callback(devices, asio_device_changed);
 	fill_out_devices(devices);
-	std::string dev_descr = "ASIO devices.\n";
+	std::string dev_descr = "ASIO devices.";
 	obs_property_set_long_description(devices, dev_descr.c_str());
 	// get channel number from output speaker layout set by obs
 	DWORD recorded_channels = get_obs_output_channels();
 
-	std::string route_descr = "For each OBS output channel, pick one\n of the input channels of your ASIO device.\n";
+	std::string route_descr = "For each OBS output channel, pick one\n of the input channels of your ASIO device.";
 	const char* route_name_format = "route %i";
 	char* route_name = new char[strlen(route_name_format) + pad_digits];
 
@@ -1576,12 +1576,12 @@ obs_properties_t * asio_get_properties(void *unused)
 	rate = obs_properties_add_list(props, "sample rate",
 		obs_module_text("SampleRate"), OBS_COMBO_TYPE_LIST,
 		OBS_COMBO_FORMAT_INT);
-	std::string rate_descr = "Sample rate : number of samples per channel in one second.\n";
+	std::string rate_descr = "Sample rate : number of samples per channel in one second.";
 	obs_property_set_long_description(rate, rate_descr.c_str());
 
 	bit_depth = obs_properties_add_list(props, "bit depth", TEXT_BITDEPTH,
 		OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	std::string bit_descr = "Bit depth : size of a sample in bits and format.\n"
+	std::string bit_descr = "Bit depth : size of a sample in bits and format."
 		"Float should be preferred.";
 	obs_property_set_long_description(bit_depth, bit_descr.c_str());
 
@@ -1602,13 +1602,13 @@ obs_properties_t * asio_get_properties(void *unused)
 	obs_property_set_long_description(buffer_size, buffer_descr.c_str());
 
 	device_timeout = obs_properties_add_bool(props, "device may timeout", obs_module_text("DeviceMayTimeout"));
-	std::string device_timeout_descr = "Device May Timeout : Check this if your device has issues starting up / disconnecting. (May solve 'Max audio buffering reached' errors).\n";
+	std::string device_timeout_descr = "Device May Timeout : Check this if your device has issues starting up / disconnecting. (May solve 'Max audio buffering reached' errors).";
 	obs_property_set_long_description(device_timeout, device_timeout_descr.c_str());
 	obs_property_set_modified_callback(device_timeout, device_timeout_changed);
 
 	retry_limit = obs_properties_add_int(props, "retry limit",
 		obs_module_text("RetryLimit"), -1, 65536, 1);
-	std::string retry_limit_descr = "Retry limit : Maximum retries after device timeouts. -1 = infite retries\n";
+	std::string retry_limit_descr = "Retry limit : Maximum retries after device timeouts. -1 = infite retries";
 	obs_property_set_long_description(retry_limit, retry_limit_descr.c_str());
 	obs_property_set_enabled(retry_limit, false);
 
