@@ -689,11 +689,15 @@ static bool fill_out_channels_modified(obs_properties_t *props, obs_property_t *
 		}
 	}
 
-	obs_property_list_clear(list);
-	obs_property_list_add_int(list, obs_module_text("Mute"), -1);
+	long long currentRoute = obs_data_get_integer(settings, obs_property_get_name(list));
 
-	if (!_callback || !_device)
+	obs_property_list_clear(list);
+
+	if (!_callback || !_device) {
+		obs_property_list_insert_int(list, 0, " ", currentRoute);
+		obs_property_list_item_disable(list, 0, true);
 		return true;
+	}
 
 	juce::StringArray in_names       = _device->getInputChannelNames();
 	int               input_channels = in_names.size();
