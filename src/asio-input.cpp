@@ -699,6 +699,8 @@ static bool fill_out_channels_modified(obs_properties_t *props, obs_property_t *
 		return true;
 	}
 
+	obs_property_list_add_int(list, obs_module_text("Mute"), -1);
+
 	juce::StringArray in_names       = _device->getInputChannelNames();
 	int               input_channels = in_names.size();
 
