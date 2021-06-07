@@ -711,7 +711,6 @@ static bool asio_device_changed(void *vptr, obs_properties_t *props, obs_propert
 	size_t                        i;
 	const char *                  curDeviceId  = obs_data_get_string(settings, "device_id");
 	int                           max_channels = get_max_obs_channels();
-	std::vector<obs_property_t *> route(max_channels, nullptr);
 	speaker_layout                layout = (speaker_layout)obs_data_get_int(settings, "speaker_layout");
 	obs_property_t *              panel  = obs_properties_get(props, "ctrl");
 
@@ -734,10 +733,10 @@ static bool asio_device_changed(void *vptr, obs_properties_t *props, obs_propert
 	} else {
 		for (i = 0; i < max_channels; i++) {
 			std::string name = "route " + std::to_string(i);
-			route[i]         = obs_properties_get(props, name.c_str());
-			obs_property_list_clear(route[i]);
-			obs_property_set_modified_callback(route[i], fill_out_channels_modified);
-			obs_property_set_visible(route[i], i < recorded_channels);
+			obs_property_t *r = obs_properties_get(props, name.c_str());
+			obs_property_list_clear(r);
+			obs_property_set_modified_callback(r, fill_out_channels_modified);
+			obs_property_set_visible(r, i < recorded_channels);
 		}
 	}
 
@@ -754,16 +753,15 @@ static bool asio_layout_changed(obs_properties_t *props, obs_property_t *list, o
 {
 	UNUSED_PARAMETER(list);
 	int                           max_channels = get_max_obs_channels();
-	std::vector<obs_property_t *> route(max_channels, nullptr);
 	speaker_layout                layout            = (speaker_layout)obs_data_get_int(settings, "speaker_layout");
 	int                           recorded_channels = get_audio_channels(layout);
 	int                           i                 = 0;
 	for (i = 0; i < max_channels; i++) {
 		std::string name = "route " + std::to_string(i);
-		route[i]         = obs_properties_get(props, name.c_str());
-		obs_property_list_clear(route[i]);
-		obs_property_set_modified_callback(route[i], fill_out_channels_modified);
-		obs_property_set_visible(route[i], i < recorded_channels);
+		obs_property_t* r = obs_properties_get(props, name.c_str());
+		obs_property_list_clear(r);
+		obs_property_set_modified_callback(r, fill_out_channels_modified);
+		obs_property_set_visible(r, i < recorded_channels);
 	}
 	return true;
 }
