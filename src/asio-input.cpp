@@ -704,8 +704,12 @@ static bool fill_out_channels_modified(obs_properties_t *props, obs_property_t *
 	juce::StringArray in_names       = _device->getInputChannelNames();
 	int               input_channels = in_names.size();
 
-	int i = 0;
+	if (currentRoute >= input_channels) {
+		obs_property_list_add_int(list, " ", currentRoute);
+		obs_property_list_item_disable(list, 1, true);
+	}
 
+	int i = 0;
 	for (; i < input_channels; i++)
 		obs_property_list_add_int(list, in_names[i].toStdString().c_str(), i);
 
