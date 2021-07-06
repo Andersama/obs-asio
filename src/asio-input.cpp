@@ -689,7 +689,7 @@ static bool fill_out_channels_modified(obs_properties_t *props, obs_property_t *
 		}
 	}
 
-	long long currentRoute = obs_data_get_integer(settings, obs_property_get_name(list));
+	long long currentRoute = obs_data_get_int(settings, obs_property_name(list));
 
 	obs_property_list_clear(list);
 
