@@ -348,6 +348,10 @@ public:
 
 	void audioDeviceAboutToStart(juce::AudioIODevice *device)
 	{
+		if (device == nullptr) {
+			blog(LOG_INFO, "Attempting to start a device (nullptr)? This should never happen");
+			return;
+		}
 		blog(LOG_INFO, "Starting (%s)", device->getName().toStdString().c_str());
 		juce::String name = device->getName();
 		sample_rate       = device->getCurrentSampleRate();
