@@ -276,7 +276,7 @@ public:
 
 		if (unmuted_chs.size() == 0) {
 			blog(LOG_INFO, "all chs muted");
-			return 0;
+			return false;
 		}
 
 		for (short i = 0; i < aoi.speakers; i++) {
@@ -1347,8 +1347,9 @@ void asio_init(struct asio_data *data)
 	blog(LOG_INFO, "starting listener thread for: %lu", device_index);
 	device_list[device_index]->add_listener(data);
 
-	fail:
-	blog(LOG_ERROR, "Device could not be initialized.\n");
+	//This is a really stupid hack to the interface hanging when switching devices.
+	//Basically I'm just giving it some time to at least read and write some samples.
+	Sleep(1);
 }
 
 static void * asio_create(obs_data_t *settings, obs_source_t *source)
