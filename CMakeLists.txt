@@ -52,10 +52,12 @@ set(obs-asio-sdk_HEADERS
 	)
 
 set(obs-asio_HEADERS
+	src/resource.h
 	)
 
 set(obs-asio_SOURCES
 	src/asio-input.cpp
+	src/obs-asio.rc
 )
 
 add_library(obs-asio MODULE
@@ -63,6 +65,9 @@ add_library(obs-asio MODULE
 	${obs-asio_HEADERS}
 	${obs-asio-sdk_HEADERS}
 )
+
+source_group("Resource Files" FILES src/obs-asio.rc)
+
 target_link_libraries(obs-asio
 	libobs
 	${BASS_ASIO_LIB}
