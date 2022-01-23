@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <list>
 #include <unordered_map>
+#include <memory>
 #include <stdio.h>
 #include <string>
 #include <sstream>
@@ -209,14 +210,14 @@ public:
 	bool useDeviceTiming = false;
 
 	std::string get_id() {
-		const void * address = static_cast<const void*>(source);
+		const void *address = source;
 		std::stringstream ss;
-		ss << "0x" << std::uppercase << (int)address;
+		ss << "0x" << std::uppercase << reinterpret_cast<int>(address);
 		std::string name = ss.str();
 		return name;
 	}
 
-	asio_data() : source(NULL), first_ts(0), device_index(-1) {
+	asio_data() : source(nullptr), device_index(-1), first_ts(0) {
 		device_timeout = false;
 		retry_limit = 0;
 		InitializeCriticalSection(&settings_mutex);
@@ -443,7 +444,7 @@ public:
 	void prep_circle_buffer(DWORD bufpref) {
 		if (!circle_buffer_prepped) {
 			//create a buffer w/ a minimum of 4 slots and a target of a fraction of 2048 samples
-			buffer_count = max(4, ceil(2048 / bufpref));
+			buffer_count = max(4, static_cast<size_t>(ceil(2048.0 / bufpref)));
 			circlebuf_init(&audio_buffer);
 			circlebuf_reserve(&audio_buffer, buffer_count * sizeof(device_source_audio));
 			for (int i = 0; i < buffer_count; i++) {
@@ -460,7 +461,7 @@ public:
 
 	void prep_events(long input_chs) {
 		if (!events_prepped) {
-			receive_signals = (WinHandle*)calloc(input_chs, sizeof(WinHandle));
+			receive_signals = static_cast<WinHandle*>(calloc(input_chs, sizeof(WinHandle)));
 			for (int i = 0; i < input_chs; i++) {
 				receive_signals[i] = CreateEvent(nullptr, true, false, nullptr);
 			}
@@ -586,7 +587,7 @@ public:
 	}
 
 	static DWORD WINAPI capture_thread(void *data) {
-		listener_pair *pair = static_cast<listener_pair*>(data);
+		std::unique_ptr<listener_pair> pair(static_cast<listener_pair*>(data));
 		asio_data *source = pair->asio_listener;//static_cast<asio_data*>(data);
 		device_data *device = pair->device;//static_cast<device_data*>(data);
 		struct obs_audio_info aoi;
@@ -629,7 +630,6 @@ public:
 					if (source->retry_limit != -1 && device->retry_count > source->retry_limit) {
 						// We reached our retry_limit :(
 						blog(LOG_INFO, "%s closing due to timeout, device %lu WAIT_TIMEOUT retry_count=%u retry_limit=%u", thread_name.c_str(), device->device_index, device->retry_count, source->retry_limit);
-						delete pair;
 						return 0;
 					}
 				} else if (device->retry_count >= 1) {
@@ -646,53 +646,42 @@ public:
 				if (source->device_index != device->device_index) {
 					blog(LOG_INFO, "source device index %lu is not device index %lu", source->device_index, device->device_index);
 					blog(LOG_INFO, "%s closing", thread_name.c_str());
-					delete pair;
 					return 0;
 				} else if (!source->isASIOActive) {
 					blog(LOG_INFO, "%x indicated it wanted to disconnect", source->get_id());
 					blog(LOG_INFO, "%s closing", thread_name.c_str());
-					delete pair;
 					return 0;
 				}
 			} else if (waitResult == WAIT_OBJECT_0 + 1) {
 				blog(LOG_INFO, "device %l indicated it wanted to disconnect", device->device_index);
 				blog(LOG_INFO, "%s closing", thread_name.c_str());
-				delete pair;
 				return 0;
 			} else if (waitResult == WAIT_OBJECT_0 + 2) {
 				blog(LOG_INFO, "%x indicated it wanted to disconnect", source->get_id());
 				blog(LOG_INFO, "%s closing", thread_name.c_str());
-				delete pair;
 				return 0;
 			} else if (waitResult == WAIT_ABANDONED_0) {
 				blog(LOG_INFO, "a mutex for %s was abandoned while listening to", thread_name.c_str(), device->device_index);
 				blog(LOG_INFO, "%s closing", thread_name.c_str());
-				delete pair;
 				return 0;
 			} else if (waitResult == WAIT_ABANDONED_0 + 1) {
 				blog(LOG_INFO, "a mutex for %s was abandoned while listening to", thread_name.c_str(), device->device_index);
 				blog(LOG_INFO, "%s closing", thread_name.c_str());
-				delete pair;
 				return 0;
 			} else if (waitResult == WAIT_ABANDONED_0 + 2) {
 				blog(LOG_INFO, "a mutex for %s was abandoned while listening to", thread_name.c_str(), device->device_index);
 				blog(LOG_INFO, "%s closing", thread_name.c_str());
-				delete pair;
 				return 0;
 			} else if (waitResult == WAIT_FAILED) {
 				blog(LOG_INFO, "listener thread wait %lu failed with 0x%x", device->device_index, GetLastError());
 				blog(LOG_INFO, "%s closing", thread_name.c_str());
-				delete pair;
 				return 0;
 			} else {
 				blog(LOG_INFO, "unexpected wait result = %i", waitResult);
 				blog(LOG_INFO, "%s closing", thread_name.c_str());
-				delete pair;
 				return 0;
 			}
-
 		}
-		delete pair;
 		return 0;
 	}
 
@@ -739,14 +728,10 @@ uint8_t getDeviceCount() {
 
 // get the device index from a device name : the current index can be retrieved from DWORD BASS_ASIO_GetDevice();
 DWORD get_device_index(const char *device_info_name) {
-	int res;
 	BASS_ASIO_SetUnicode(false);
 	BASS_ASIO_DEVICEINFO info;
-	bool ret;
-	uint32_t i;
-	for (i = 0; BASS_ASIO_GetDeviceInfo(i, &info); i++) {
-		res = strcmp(info.name, device_info_name);
-		if (res == 0) {
+	for (uint32_t i = 0; BASS_ASIO_GetDeviceInfo(i, &info); i++) {
+		if (strcmp(info.name, device_info_name) == 0) {
 			return i;
 		}
 	}
@@ -762,8 +747,7 @@ bool is_device_index_valid(DWORD index) {
 }
 
 DWORD get_device_buffer_index(BASS_ASIO_DEVICEINFO device_info) {
-	uint32_t i;
-	for (i = 0; i < device_list.size(); i++) {
+	for (uint32_t i = 0; i < device_list.size(); i++) {
 		if (strcmp(device_list[i]->device_info.name, device_info.name) == 0) {
 			return i;
 		}
@@ -885,7 +869,7 @@ static bool fill_out_sample_rates(obs_properties_t *props, obs_property_t *list,
 	BASS_ASIO_DEVICEINFO devinfo;
 	int index = BASS_ASIO_GetDevice();
 	bool ret = BASS_ASIO_GetDeviceInfo(index, &devinfo);
-	bool ret2;
+	bool ret2 = false;
 	if (!ret) {
 		blog(LOG_ERROR, "Unable to retrieve info on the current driver \n"
 			"error number is : %i \n; check BASS_ASIO_ErrorGetCode\n",
@@ -907,7 +891,7 @@ static bool fill_out_sample_rates(obs_properties_t *props, obs_property_t *list,
 		char* cstr = new char[rate.length() + 1];
 		strcpy(cstr, rate.c_str());
 		obs_property_list_add_int(list, cstr, 44100);
-		delete cstr;
+		delete []cstr;
 	} else {
 		blog(LOG_INFO, "Device loaded does not support 44100 Hz sample rate\n");
 	}
@@ -918,7 +902,7 @@ static bool fill_out_sample_rates(obs_properties_t *props, obs_property_t *list,
 		char* cstr = new char[rate.length() + 1];
 		strcpy(cstr, rate.c_str());
 		obs_property_list_add_int(list, cstr, 48000);
-		delete cstr;
+		delete []cstr;
 	} else {
 		blog(LOG_INFO, "Device loaded does not support 48000 Hz sample rate\n");
 	}
@@ -930,7 +914,7 @@ static bool fill_out_bit_depths(obs_properties_t *props, obs_property_t *list, o
 	BASS_ASIO_DEVICEINFO devinfo;
 	int index = BASS_ASIO_GetDevice();
 	bool ret = BASS_ASIO_GetDeviceInfo(index, &devinfo);
-	bool ret2;
+	bool ret2 = false;
 	if (!ret) {
 		blog(LOG_ERROR, "Unable to retrieve info on the current driver \n"
 			"error number is : %i \n; check BASS_ASIO_ErrorGetCode\n",
@@ -1225,7 +1209,7 @@ static bool device_timeout_changed(obs_properties_t* props,
 	return true;
 }
 
-void asio_init(struct asio_data *data)
+void asio_init(asio_data *data)
 {
 	// get info, useful for debug
 	BASS_ASIO_INFO info;
@@ -1571,8 +1555,8 @@ obs_properties_t * asio_get_properties(void *unused)
 		obs_property_set_long_description(route[i], route_descr.c_str());
 	}
 
-	free(route_name);
-	free(route_obs);
+	delete []route_name;
+	delete []route_obs;
 
 	rate = obs_properties_add_list(props, "sample rate",
 		obs_module_text("SampleRate"), OBS_COMBO_TYPE_LIST,
