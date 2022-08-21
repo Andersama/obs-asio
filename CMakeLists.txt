@@ -9,12 +9,6 @@ project(obs-asio)
 # be careful there are two versions of the lib and dll (x86 and x64)
 
 ##########################################
-# find libobs                            #
-##########################################
-include(external/FindLibObs.cmake)
-find_package(LibObs REQUIRED)
-
-##########################################
 # set architecture                       #
 ##########################################
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -65,6 +59,12 @@ add_library(obs-asio MODULE
 	${obs-asio_HEADERS}
 	${obs-asio-sdk_HEADERS}
 )
+
+##########################################
+# find libobs                            #
+##########################################
+include(external/FindLibObs.cmake)
+find_package(LibObs REQUIRED)
 
 source_group("Resource Files" FILES src/obs-asio.rc)
 
