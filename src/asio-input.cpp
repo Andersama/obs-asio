@@ -212,7 +212,7 @@ public:
 	std::string get_id() {
 		const void *address = source;
 		std::stringstream ss;
-		ss << "0x" << std::uppercase << reinterpret_cast<int>(address);
+		ss << "0x" << std::uppercase << reinterpret_cast<intptr_t>(address);
 		std::string name = ss.str();
 		return name;
 	}
@@ -575,7 +575,7 @@ public:
 			}
 		}
 		_source_audio->format = planar_format;
-		_source_audio->frames = frames_count;
+		_source_audio->frames = static_cast<uint32_t>(frames_count);
 		_source_audio->input_chs = info.inputs;
 		_source_audio->samples_per_sec = samples_per_sec;
 		_source_audio->timestamp = _source_audio->timestamp = os_gettime_ns() - ((_source_audio->frames * NSEC_PER_SEC) / _source_audio->samples_per_sec);
@@ -861,7 +861,7 @@ static bool fill_out_channels_modified(obs_properties_t *props, obs_property_t *
 		test = test + " " + ch_info.name;
 		obs_property_list_add_int(list, test.c_str(), i);
 	}
-	return true;
+	return false;
 }
 
 //creates list of input sample rates supported by the device and OBS (obs supports only 44100 and 48000)
@@ -906,7 +906,7 @@ static bool fill_out_sample_rates(obs_properties_t *props, obs_property_t *list,
 	} else {
 		blog(LOG_INFO, "Device loaded does not support 48000 Hz sample rate\n");
 	}
-	return true;
+	return false;
 }
 
 //create list of supported audio formats
@@ -961,7 +961,7 @@ static bool fill_out_bit_depths(obs_properties_t *props, obs_property_t *list, o
 			obs_property_list_add_int(list, "32 bit float", AUDIO_FORMAT_FLOAT);
 			return false;
 		}
-		return true;
+		return false;
 	}
 	return false;
 }
@@ -1030,7 +1030,7 @@ static bool fill_out_buffer_sizes(obs_properties_t *props, obs_property_t *list,
 			}
 		}
 
-		return true;
+		return false;
 	}
 	return false;
 }
@@ -1094,7 +1094,7 @@ static bool asio_device_changed(obs_properties_t *props,
 		}
 	}
 
-	return true;
+	return false;
 }
 
 int mix(uint8_t *inputBuffer, obs_source_audio *out, size_t bytes_per_ch, int route[], unsigned int recorded_device_chs = UINT_MAX) {
@@ -1129,7 +1129,7 @@ void CALLBACK asio_device_setting_changed(DWORD notify, void *device_ptr) {
 	if (ret) {
 		switch (notify) {
 		case BASS_ASIO_NOTIFY_RATE:
-			new_sample_rate = BASS_ASIO_GetRate();
+			new_sample_rate = static_cast<uint32_t>(BASS_ASIO_GetRate());
 			blog(LOG_WARNING, "device %l changed sample rate to %f", device->device_index, new_sample_rate);
 
 			if (!ret) {
@@ -1236,7 +1236,7 @@ void asio_init(asio_data *data)
 	// to be implemented : to avoid issues, force to bufpref
 	// this ignores any setting; bufpref is most likely set in asio control panel
 	//check channel setup
-	DWORD checkrate = BASS_ASIO_GetRate();
+	DWORD checkrate = static_cast<DWORD>(BASS_ASIO_GetRate());
 	blog(LOG_INFO, "sample rate is set in device to %i.\n", checkrate);
 	DWORD checkbitdepth = BASS_ASIO_ChannelGetFormat(true, 0);
 	blog(LOG_INFO, "bitdepth is set in device to %i, format: %i.\n", bytedepth_format(checkbitdepth), checkbitdepth);
@@ -1351,7 +1351,7 @@ static void * asio_create(obs_data_t *settings, obs_source_t *source)
 
 void asio_destroy(void *vptr)
 {
-	struct asio_data *data = (asio_data *)vptr;
+	asio_data *data = (asio_data *)vptr;
 	if (data) {
 		bfree((void*)data->device);
 		if (data->device_index < device_list.size()) {
@@ -1371,12 +1371,12 @@ void asio_destroy(void *vptr)
 /* set all settings to asio_data struct and pass to driver */
 void asio_update(void *vptr, obs_data_t *settings)
 {
-	struct asio_data *data = (asio_data *)vptr;
+	asio_data *data = (asio_data *)vptr;
 	const char *device;
-	unsigned int rate;
-	audio_format BitDepth;
-	uint16_t BufferSize;
-	unsigned int channels;
+	//unsigned int rate;
+	//audio_format BitDepth;
+	//uint16_t BufferSize;
+	//unsigned int channels;
 	BASS_ASIO_INFO info;
 	int res;
 	bool ret;
@@ -1481,11 +1481,11 @@ void asio_update(void *vptr, obs_data_t *settings)
 
 		data->input_channels = info.inputs;
 		data->output_channels = info.outputs;
-		data->device_index = device_index;
+		data->device_index = static_cast<uint8_t>(device_index);
 
 		data->muted_chs = data->_get_muted_chs(data->route);
 		data->unmuted_chs = data->_get_unmuted_chs(data->route);
-		data->retry_limit = obs_data_get_int(settings, "retry limit");
+		data->retry_limit = static_cast<uint32_t>(obs_data_get_int(settings, "retry limit"));
 		data->device_timeout = obs_data_get_bool(settings, "device may timeout");
 
 		asio_init(data);

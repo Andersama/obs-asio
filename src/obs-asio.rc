@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,1,1,0
- PRODUCTVERSION 3,1,1,0
+ FILEVERSION 3,1,2,0
+ PRODUCTVERSION 3,1,2,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "The obs-asio contributors"
             VALUE "FileDescription", "ASIO input source for OBS Studio"
-            VALUE "FileVersion", "3.1.1"
+            VALUE "FileVersion", "3.1.2"
             VALUE "InternalName", "obs-asio.dll"
             VALUE "LegalCopyright", "Copyright (C) 2022 the obs-asio contributors"
             VALUE "OriginalFilename", "obs-asio.dll"
             VALUE "ProductName", "obs-asio"
-            VALUE "ProductVersion", "3.1.1"
+            VALUE "ProductVersion", "3.1.2"
         END
     END
     BLOCK "VarFileInfo"
