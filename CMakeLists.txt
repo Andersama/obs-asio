@@ -16,8 +16,10 @@ project(obs-asio)
 ##########################################
 # find libobs                            #
 ##########################################
-include(cmake/FindLibObs.cmake)
-find_package(Libobs REQUIRED)
+find_package(libobs REQUIRED)
+find_package(obs-frontend-api REQUIRED)
+include(cmake/ObsPluginHelpers.cmake)
+
 if(NOT DEFINED OBS_FRONTEND_LIB)
 	set(OBS_FRONTEND_LIB "OBS_FRONTEND_LIB-NOTFOUND" CACHE FILEPATH "OBS frontend library")
 	message(FATAL_ERROR "Could not find OBS Frontend API\'s library !")
