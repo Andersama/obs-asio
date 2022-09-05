@@ -25,7 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 #include <vector>
-#include <JuceHeader.h>
+//#include <JuceHeader.h>
+#include <juce_core/juce_core.h>
+#include <juce_audio_devices/juce_audio_devices.h>
+using namespace juce;
+
 #include <QWidget>
 #include <QMainWindow>
 #include <QWindow>
