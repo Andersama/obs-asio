@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(obs-asio)
+project(obs-asio VERSION 3.1.0)
+add_library(obs-asio MODULE)
 
 # in cmake gui set the following:
 # LIBOBS_INCLUDE_DIR = path to obs.h, obs-studio/libobs
@@ -13,17 +14,29 @@ project(obs-asio)
 # JUCE_INCLUDE_DIR == path of Juce includes; if you used ProJucer, this will be the path of JuceLibraryCode.
 # If you select to build with a juce dll, you'll have to copy it in the obs-plugins folder.
 
+include(FetchContent)
+FetchContent_Declare(
+	JUCE
+	GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+	GIT_TAG 7.0.2
+)
+
+FetchContent_Declare(
+	ASIOSDK
+	URL	https://www.steinberg.net/asiosdk
+	URL_HASH MD5=b161ab28894dd1dd91e075194f003dec
+)
+
+FetchContent_MakeAvailable(JUCE ASIOSDK)
+
 ##########################################
 # find libobs                            #
 ##########################################
 find_package(libobs REQUIRED)
 find_package(obs-frontend-api REQUIRED)
 include(cmake/ObsPluginHelpers.cmake)
+find_qt(COMPONENTS Widgets Core)
 
-if(NOT DEFINED OBS_FRONTEND_LIB)
-	set(OBS_FRONTEND_LIB "OBS_FRONTEND_LIB-NOTFOUND" CACHE FILEPATH "OBS frontend library")
-	message(FATAL_ERROR "Could not find OBS Frontend API\'s library !")
-endif()
 ##########################################
 # set architecture                       #
 ##########################################
@@ -52,21 +65,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt5Core REQUIRED)
-# Find the QtWidgets library
-find_package(Qt5Widgets)
-
-
-include_directories(
-	SYSTEM "${LIBOBS_INCLUDE_DIR}"
-	"${LIBOBS_INCLUDE_DIR}/../UI/obs-frontend-api"
-	"${LIBOBS_INCLUDE_DIR}/../${OBS_BUILDDIR_ARCH}/UI"
-	${JUCE_INCLUDE_DIR}
-	${JUCE_INCLUDE_DIR}/modules
-	${Qt5Core_INCLUDES}
-	${Qt5Widgets_INCLUDES}
-)
-
 set(obs-asio_QRC
 	asio-input.qrc)
 	
@@ -74,21 +72,37 @@ set(obs-asio_SOURCES
 	src/asio-input.cpp
 )
 
-set(JUCE_LIB optimized ${JUCE_LIBRARY} debug ${JUCE_LIBRARY_DEBUG})
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/asio-input.cpp)
 
-qt5_add_resources(obs-asio_QRC_SOURCES ${win-asio_QRC})
+target_compile_options(obs-asio PRIVATE /WX-)
 
-add_library(obs-asio MODULE
-	${win-asio_SOURCES}
-	${win-asio_QRC_SOURCES}
+target_compile_definitions(obs-asio
+	PUBLIC
+	# JUCE_WEB_BROWSER and JUCE_USE_CURL would be on by default, but you might not need them.
+	JUCE_WEB_BROWSER=1  # If you remove this, add `NEEDS_WEB_BROWSER TRUE` to the `juce_add_plugin` call
+	JUCE_USE_CURL=0     # If you remove this, add `NEEDS_CURL TRUE` to the `juce_add_plugin` call
+	JUCE_ASIO=1
 )
 
-target_link_libraries(obs-asio
-	libobs
-	obs-frontend-api
-	${JUCE_LIB}
-	Qt5::Core
-	Qt5::Widgets
+# debug cmake variables
+get_cmake_property(_variableNames VARIABLES)
+list (SORT _variableNames)
+foreach (_variableName ${_variableNames})
+	message(STATUS "${_variableName}=${${_variableName}}")
+endforeach()
+
+target_include_directories(obs-asio PRIVATE ${CMAKE_SOURCE_DIR}/src ${JUCE_MODULES_DIR} ${asiosdk_SOURCE_DIR}/common)
+
+qt_add_resources(obs-asio_QRC_SOURCES ${win-asio_QRC})
+
+target_link_libraries(obs-asio PRIVATE
+	OBS::libobs
+	OBS::obs-frontend-api
+	juce::juce_core
+	juce::juce_audio_devices
+	juce::juce_audio_utils
+	Qt::Core
+	Qt::Widgets
 )
 
 #install_obs_plugin_with_data(obs-asio data) ==> internal plugin install
