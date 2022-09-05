@@ -87,7 +87,7 @@ target_compile_definitions(obs-asio
 
 target_include_directories(obs-asio PRIVATE ${CMAKE_SOURCE_DIR}/src ${JUCE_MODULES_DIR} ${asiosdk_SOURCE_DIR}/common)
 
-qt_add_resources(obs-asio_QRC_SOURCES ${win-asio_QRC})
+qt5_add_resources(obs-asio_QRC_SOURCES ${win-asio_QRC})
 
 target_link_libraries(obs-asio PRIVATE
 	OBS::libobs
@@ -95,8 +95,8 @@ target_link_libraries(obs-asio PRIVATE
 	juce::juce_core
 	juce::juce_audio_devices
 	juce::juce_audio_utils
-	Qt::Core
-	Qt::Widgets
+	Qt5::Core
+	Qt5::Widgets
 )
 
 setup_plugin_target(obs-asio)

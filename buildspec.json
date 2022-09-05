@@ -65,12 +65,12 @@
             "deploymentTarget": "10.15"
         },
         "windows-x64": {
-            "qtVersion": 6,
+            "qtVersion": 5,
             "visualStudio": "Visual Studio 17 2022",
             "platformSDK": "10.0.20348.0"
         },
         "windows-x86": {
-            "qtVersion": 6,
+            "qtVersion": 5,
             "visualStudio": "Visual Studio 17 2022",
             "platformSDK": "10.0.20348.0"
         },
