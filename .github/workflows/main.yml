@@ -105,6 +105,20 @@ jobs:
           config: RelWithDebInfo
           visualStudio: 'Visual Studio 17 2022'
 
+      - name: Prepare Package
+        working-directory: ${{ github.workspace }}/plugin
+        run: |
+          ## Remove JUCE dirs
+          $RemoveArgs = @{
+            ErrorAction = 'SilentlyContinue'
+            Path = @(
+              "${{ github.workspace }}/plugin/release/include"
+              "${{ github.workspace }}/plugin/release/bin"
+              "${{ github.workspace }}/plugin/release/lib"
+            )
+          }
+          Remove-Item @RemoveArgs -Recurse -Force
+
       - name: Package Plugin
         uses: ./plugin/.github/actions/package-plugin
         with:
