@@ -6,6 +6,7 @@ on:
       - '**.md'
     branches:
       - master
+      - asio-juce
     tags:
       - '*'
   pull_request:
@@ -13,6 +14,7 @@ on:
       - '**.md'
     branches:
       - master
+      - asio-juce
 
 env:
   PLUGIN_NAME: 'obs-asio'
