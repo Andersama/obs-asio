@@ -74,7 +74,7 @@ set(obs-asio_SOURCES
 
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/asio-input.cpp)
 
-target_compile_options(obs-asio PRIVATE /WX-)
+target_compile_options(obs-asio PRIVATE /WX- /w14596)
 
 target_compile_definitions(obs-asio
 	PUBLIC
