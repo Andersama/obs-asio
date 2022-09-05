@@ -74,6 +74,7 @@ set(obs-asio_SOURCES
 
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/asio-input.cpp)
 
+# suppress some errors
 target_compile_options(obs-asio PRIVATE /WX- /w14596)
 
 target_compile_definitions(obs-asio
@@ -83,13 +84,6 @@ target_compile_definitions(obs-asio
 	JUCE_USE_CURL=0     # If you remove this, add `NEEDS_CURL TRUE` to the `juce_add_plugin` call
 	JUCE_ASIO=1
 )
-
-# debug cmake variables
-get_cmake_property(_variableNames VARIABLES)
-list (SORT _variableNames)
-foreach (_variableName ${_variableNames})
-	message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()
 
 target_include_directories(obs-asio PRIVATE ${CMAKE_SOURCE_DIR}/src ${JUCE_MODULES_DIR} ${asiosdk_SOURCE_DIR}/common)
 
@@ -105,23 +99,4 @@ target_link_libraries(obs-asio PRIVATE
 	Qt::Widgets
 )
 
-#install_obs_plugin_with_data(obs-asio data) ==> internal plugin install
-#install_external_plugin_with_data(obs-asio data)
-
-set(RELEASE_DIR "${PROJECT_SOURCE_DIR}/release")
-add_custom_command(TARGET obs-asio POST_BUILD
-	COMMAND if $<CONFIG:Release>==1 (
-		"${CMAKE_COMMAND}" -E make_directory
-			"${RELEASE_DIR}/data/obs-plugins/obs-asio"
-			"${RELEASE_DIR}/obs-plugins/${OBS_ARCH_NAME}")
-
-	COMMAND if $<CONFIG:Release>==1 (
-		"${CMAKE_COMMAND}" -E copy_directory
-			"${PROJECT_SOURCE_DIR}/src/data"
-			"${RELEASE_DIR}/data/obs-plugins/obs-asio")
-
-	COMMAND if $<CONFIG:Release>==1 (
-		"${CMAKE_COMMAND}" -E copy
-			"$<TARGET_FILE:obs-asio>"
-			"${RELEASE_DIR}/obs-plugins/${OBS_ARCH_NAME}")
-)			
+setup_plugin_target(obs-asio)
