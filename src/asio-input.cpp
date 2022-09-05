@@ -134,12 +134,13 @@ static std::vector<std::string> known_layouts_str = {"Mono", "Stereo", "2.1", "4
 
 class AudioCB : public juce::AudioIODeviceCallback {
 private:
-	AudioIODevice *  _device      = nullptr;
-	char *           _name        = nullptr;
+	AudioIODevice   *_device      = nullptr;
+	char            *_name        = nullptr;
 	int              _write_index = 0;
 	double           sample_rate;
-	TimeSliceThread *_thread = nullptr;
-	uint64_t last_audio_ts = 0;
+	TimeSliceThread *_thread       = nullptr;
+	uint64_t         last_audio_ts = 0;
+
 public:
 	struct AudioBufferInfo {
 		AudioBuffer<float> buffer;
@@ -160,7 +161,7 @@ public:
 		std::vector<short> _route;
 		std::vector<short> _route_out;
 		obs_source_audio   in;
-		obs_source_t *     source;
+		obs_source_t      *source;
 
 		bool     active;
 		int      read_index = 0;
@@ -270,9 +271,9 @@ public:
 				return wait_time;
 
 			_route_out.assign(_route.begin(), _route.end());
-			int                sample_rate     = 0;
-			int                max_sample_rate = 1;
-			int                m               = (int)callback->buffers.size();
+			int sample_rate     = 0;
+			int max_sample_rate = 1;
+			int m               = (int)callback->buffers.size();
 
 			while (read_index != write_index) {
 				obs_source_audio out;
@@ -418,7 +419,7 @@ static bool show_panel(obs_properties_t *props, obs_property_t *property, void *
 
 class ASIOPlugin {
 private:
-	AudioIODevice *         _device   = nullptr;
+	AudioIODevice          *_device   = nullptr;
 	AudioCB::AudioListener *_listener = nullptr;
 	std::vector<uint16_t>   _route;
 	speaker_layout          _speakers;
@@ -470,9 +471,9 @@ public:
 		QMainWindow *main_window = (QMainWindow *)obs_frontend_get_main_window();
 		QMessageBox  mybox(main_window);
 		QString      text = "v.3.1.0\r\n © 2021, license GPL v3\r\n"
-			       "Based on Juce library\r\n\r\n"
-			       "Authors:\r\n"
-			       "Andersama (main author) & pkv\r\n";
+				    "Based on Juce library\r\n\r\n"
+				    "Authors:\r\n"
+				    "Andersama (main author) & pkv\r\n";
 		mybox.setText(text);
 		mybox.setIconPixmap(QPixmap(":/res/images/asiologo.png"));
 		mybox.setWindowTitle(QString("Credits: obs-asio"));
@@ -483,11 +484,11 @@ public:
 	static obs_properties_t *Properties(void *vptr)
 	{
 		UNUSED_PARAMETER(vptr);
-		obs_properties_t *            props;
-		obs_property_t *              devices;
-		obs_property_t *              format;
-		obs_property_t *              panel;
-		obs_property_t *              button;
+		obs_properties_t             *props;
+		obs_property_t               *devices;
+		obs_property_t               *format;
+		obs_property_t               *panel;
+		obs_property_t               *button;
 		int                           max_channels = get_max_obs_channels();
 		std::vector<obs_property_t *> route(max_channels, nullptr);
 
@@ -513,7 +514,7 @@ public:
 		}
 
 		panel = obs_properties_add_button2(props, "ctrl", obs_module_text("Control Panel"), show_panel, vptr);
-		ASIOPlugin *   plugin = static_cast<ASIOPlugin *>(vptr);
+		ASIOPlugin    *plugin = static_cast<ASIOPlugin *>(vptr);
 		AudioIODevice *device = nullptr;
 		if (plugin)
 			device = plugin->getDevice();
@@ -527,11 +528,11 @@ public:
 	{
 		std::string    name     = obs_data_get_string(settings, "device_id");
 		speaker_layout layout   = (speaker_layout)obs_data_get_int(settings, "speaker_layout");
-		AudioCB *      callback = nullptr;
+		AudioCB       *callback = nullptr;
 
 		AudioIODevice *selected_device = nullptr;
 		for (int i = 0; i < callbacks.size(); i++) {
-			AudioCB *      cb     = callbacks[i];
+			AudioCB       *cb     = callbacks[i];
 			AudioIODevice *device = cb->getDevice();
 			std::string    n      = cb->getName();
 			if (n == name) {
@@ -667,7 +668,7 @@ static bool show_panel(obs_properties_t *props, obs_property_t *property, void *
 
 	if (!data)
 		return false;
-	ASIOPlugin *   plugin = static_cast<ASIOPlugin *>(data);
+	ASIOPlugin    *plugin = static_cast<ASIOPlugin *>(data);
 	AudioIODevice *device = plugin->getDevice();
 	if (device && device->hasControlPanel())
 		device->showControlPanel();
@@ -678,11 +679,11 @@ static bool fill_out_channels_modified(obs_properties_t *props, obs_property_t *
 {
 	UNUSED_PARAMETER(props);
 	std::string    name      = obs_data_get_string(settings, "device_id");
-	AudioCB *      _callback = nullptr;
+	AudioCB       *_callback = nullptr;
 	AudioIODevice *_device   = nullptr;
 
 	for (int i = 0; i < callbacks.size(); i++) {
-		AudioCB *      cb     = callbacks[i];
+		AudioCB       *cb     = callbacks[i];
 		AudioIODevice *device = cb->getDevice();
 		std::string    n      = cb->getName();
 		if (n == name) {
@@ -716,11 +717,11 @@ static bool fill_out_channels_modified(obs_properties_t *props, obs_property_t *
 
 static bool asio_device_changed(void *vptr, obs_properties_t *props, obs_property_t *list, obs_data_t *settings)
 {
-	size_t                        i;
-	const char *                  curDeviceId  = obs_data_get_string(settings, "device_id");
-	int                           max_channels = get_max_obs_channels();
-	speaker_layout                layout = (speaker_layout)obs_data_get_int(settings, "speaker_layout");
-	obs_property_t *              panel  = obs_properties_get(props, "ctrl");
+	size_t          i;
+	const char     *curDeviceId  = obs_data_get_string(settings, "device_id");
+	int             max_channels = get_max_obs_channels();
+	speaker_layout  layout       = (speaker_layout)obs_data_get_int(settings, "speaker_layout");
+	obs_property_t *panel        = obs_properties_get(props, "ctrl");
 
 	int recorded_channels = get_audio_channels(layout);
 
@@ -740,8 +741,8 @@ static bool asio_device_changed(void *vptr, obs_properties_t *props, obs_propert
 		obs_property_list_item_disable(list, 0, true);
 	} else {
 		for (i = 0; i < max_channels; i++) {
-			std::string name = "route " + std::to_string(i);
-			obs_property_t *r = obs_properties_get(props, name.c_str());
+			std::string     name = "route " + std::to_string(i);
+			obs_property_t *r    = obs_properties_get(props, name.c_str());
 			obs_property_list_clear(r);
 			obs_property_set_modified_callback(r, fill_out_channels_modified);
 			obs_property_set_visible(r, i < recorded_channels);
@@ -760,13 +761,13 @@ static bool asio_device_changed(void *vptr, obs_properties_t *props, obs_propert
 static bool asio_layout_changed(obs_properties_t *props, obs_property_t *list, obs_data_t *settings)
 {
 	UNUSED_PARAMETER(list);
-	int                           max_channels = get_max_obs_channels();
-	speaker_layout                layout            = (speaker_layout)obs_data_get_int(settings, "speaker_layout");
-	int                           recorded_channels = get_audio_channels(layout);
-	int                           i                 = 0;
+	int            max_channels      = get_max_obs_channels();
+	speaker_layout layout            = (speaker_layout)obs_data_get_int(settings, "speaker_layout");
+	int            recorded_channels = get_audio_channels(layout);
+	int            i                 = 0;
 	for (i = 0; i < max_channels; i++) {
-		std::string name = "route " + std::to_string(i);
-		obs_property_t* r = obs_properties_get(props, name.c_str());
+		std::string     name = "route " + std::to_string(i);
+		obs_property_t *r    = obs_properties_get(props, name.c_str());
 		obs_property_list_clear(r);
 		obs_property_set_modified_callback(r, fill_out_channels_modified);
 		obs_property_set_visible(r, i < recorded_channels);
@@ -780,7 +781,7 @@ static void fill_out_devices(obs_property_t *prop)
 	for (int j = 0; j < deviceNames.size(); j++) {
 		bool found = false;
 		for (int i = 0; i < callbacks.size(); i++) {
-			AudioCB *   cb = callbacks[i];
+			AudioCB    *cb = callbacks[i];
 			std::string n  = cb->getName();
 			if (deviceNames[j].toStdString() == n) {
 				found = true;
@@ -788,7 +789,7 @@ static void fill_out_devices(obs_property_t *prop)
 			}
 		}
 		if (!found) {
-			char *   name = bstrdup(deviceNames[j].toStdString().c_str());
+			char    *name = bstrdup(deviceNames[j].toStdString().c_str());
 			AudioCB *cb   = new AudioCB(nullptr, name);
 			bfree(name);
 			callbacks.push_back(cb);
@@ -798,7 +799,7 @@ static void fill_out_devices(obs_property_t *prop)
 	obs_property_list_clear(prop);
 
 	for (int i = 0; i < callbacks.size(); i++) {
-		AudioCB *   cb = callbacks[i];
+		AudioCB    *cb = callbacks[i];
 		const char *n  = cb->getName();
 		obs_property_list_add_string(prop, n, n);
 	}
@@ -843,7 +844,7 @@ bool obs_module_load(void)
 void obs_module_unload(void)
 {
 	for (int i = 0; i < callbacks.size(); i++) {
-		AudioCB *      cb     = callbacks[i];
+		AudioCB       *cb     = callbacks[i];
 		AudioIODevice *device = cb->getDevice();
 		if (device) {
 			if (device->isPlaying())
