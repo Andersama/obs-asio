@@ -6,15 +6,10 @@ add_library(obs-asio MODULE)
 include(FetchContent)
 FetchContent_Declare(
   JUCE
-  GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-  GIT_TAG 7.0.2)
+  GIT_REPOSITORY https://github.com/Andersama/JUCE
+  GIT_TAG open_asio_juce)
 
-FetchContent_Declare(
-  ASIOSDK
-  URL https://www.steinberg.net/asiosdk
-  URL_HASH MD5=b161ab28894dd1dd91e075194f003dec)
-
-FetchContent_MakeAvailable(JUCE ASIOSDK)
+FetchContent_MakeAvailable(JUCE)
 
 # ##################################################################################################
 # find libobs                                                                                      #
@@ -65,8 +60,7 @@ target_compile_definitions(
          JUCE_USE_CURL=0 # If you remove this, add `NEEDS_CURL TRUE` to the `juce_add_plugin` call
          JUCE_ASIO=1)
 
-target_include_directories(obs-asio PRIVATE ${CMAKE_SOURCE_DIR}/src ${JUCE_MODULES_DIR}
-                                            ${asiosdk_SOURCE_DIR}/common)
+target_include_directories(obs-asio PRIVATE ${CMAKE_SOURCE_DIR}/src ${JUCE_MODULES_DIR})
 
 qt_add_resources(obs-asio_QRC_SOURCES ${win-asio_QRC})
 
