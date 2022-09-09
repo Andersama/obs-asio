@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.5)
 project(obs-asio VERSION 3.1.0)
 add_library(obs-asio MODULE)
 
+set(PLUGIN_AUTHOR "Andersama & pkv")
+
 include(FetchContent)
 FetchContent_Declare(
   JUCE
