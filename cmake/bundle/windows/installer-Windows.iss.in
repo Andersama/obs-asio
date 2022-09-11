@@ -1,13 +1,13 @@
 #define MyAppName "@CMAKE_PROJECT_NAME@"
 #define MyAppVersion "@CMAKE_PROJECT_VERSION@"
 #define MyAppPublisher "@PLUGIN_AUTHOR@"
-#define MyAppURL "https://obsproject.com"
+#define MyAppURL "https://github.com/Andersama/obs-asio"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{CD703FE5-1F2C-4837-BD3D-DD840D83C3E3}
+AppId={{F3544ADA-A419-4CC9-88C6-9B360B52ED45
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
