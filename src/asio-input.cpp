@@ -187,7 +187,7 @@ public:
 			int       ichs              = info->buffer.getNumChannels();
 			int       ochs              = get_audio_channels(out.speakers);
 			uint8_t **data              = (uint8_t **)(info->buffer.getArrayOfWritePointers());
-			uint8_t **sb_data           = (uint8_t **)(sb.getArrayOfWritePointers());
+			uint8_t **sb_data           = (uint8_t **)(sb.getArrayOfReadPointers());
 			uint8_t  *silent_buffer_ptr = sb_data[0];
 
 			bool muted = true;
@@ -270,7 +270,7 @@ public:
 
 			while (read_index != write_index) {
 				obs_source_audio out;
-				bool unmuted = set_data(&callback->buffers[read_index], callback->silent_buffer, out,
+				bool unmuted = set_data(&callback->buffers[read_index], callback->silent_ab, out,
 						_route_out, &sample_rate);
 				// if (unmuted && out.speakers)
 				obs_source_output_audio(source, &out);
