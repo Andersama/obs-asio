@@ -149,7 +149,7 @@ public:
 
 private:
 	std::vector<AudioBufferInfo> buffers;
-
+	AudioBuffer<float> silent_buffer;
 public:
 	class AudioListener : public TimeSliceClient {
 	private:
@@ -167,7 +167,7 @@ public:
 		size_t   silent_buffer_size = 0;
 		uint8_t *silent_buffer      = nullptr;
 
-		bool set_data(AudioBufferInfo *info, obs_source_audio &out, const std::vector<short> &route,
+		bool set_data(AudioBufferInfo *info, const AudioBuffer<float> &sb, obs_source_audio &out, const std::vector<short> &route,
 				int *sample_rate)
 		{
 			out.speakers        = in.speakers;
@@ -177,18 +177,12 @@ public:
 			out.frames          = info->buffer.getNumSamples();
 
 			*sample_rate = out.samples_per_sec;
-			// cache a silent buffer
-			size_t buffer_size = (out.frames * sizeof(bytedepth_format(out.format)));
-			if (silent_buffer_size < buffer_size) {
-				if (silent_buffer)
-					bfree(silent_buffer);
-				silent_buffer      = (uint8_t *)bzalloc(buffer_size);
-				silent_buffer_size = buffer_size;
-			}
 
 			int       ichs = info->buffer.getNumChannels();
 			int       ochs = get_audio_channels(out.speakers);
 			uint8_t **data = (uint8_t **)info->buffer.getArrayOfWritePointers();
+			uint8_t **sb_data = (uint8_t**)sb.getArrayOfWritePointers();
+			uint8_t *silent_buffer_ptr = sb_data[0];
 
 			bool muted = true;
 			for (int i = 0; i < ochs; i++) {
@@ -196,7 +190,7 @@ public:
 					out.data[i] = data[route[i]];
 					muted       = false;
 				} else {
-					out.data[i] = silent_buffer;
+					out.data[i] = silent_buffer_ptr;
 				}
 			}
 			return !muted;
@@ -210,8 +204,6 @@ public:
 
 		~AudioListener()
 		{
-			if (silent_buffer)
-				bfree(silent_buffer);
 			disconnect();
 		}
 
@@ -272,11 +264,10 @@ public:
 
 			while (read_index != write_index) {
 				obs_source_audio out;
-				bool unmuted = set_data(&callback->buffers[read_index], out, _route_out, &sample_rate);
-				if (unmuted && out.speakers)
-					obs_source_output_audio(source, &out);
-				if (sample_rate > max_sample_rate)
-					max_sample_rate = sample_rate;
+				bool unmuted = set_data(&callback->buffers[read_index], callback->silent_buffer, out, _route_out, &sample_rate);
+				//if (unmuted && out.speakers)
+				obs_source_output_audio(source, &out);
+				max_sample_rate = (sample_rate > max_sample_rate) ? sample_rate : max_sample_rate;
 				read_index = (read_index + 1) % m;
 			}
 			wait_time = ((1000 / 2) * AUDIO_OUTPUT_FRAMES) / max_sample_rate;
@@ -374,6 +365,12 @@ public:
 			inf.out.format          = AUDIO_FORMAT_FLOAT_PLANAR;
 			inf.out.samples_per_sec = sample_rate;
 			buffers.push_back(inf);
+		}
+		//cache the silent buffer at the device level
+		silent_ab = AudioBuffer<float>(1, buf_size);
+		float* samples = silent_ab.getWritePointer(0);
+		for (size_t sample = 0; sample < buf_size; sample++) {
+			samples[sample] = 0.0f;
 		}
 
 		if (!_thread) {
