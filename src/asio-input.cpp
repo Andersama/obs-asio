@@ -416,6 +416,13 @@ public:
 
 static bool show_panel(obs_properties_t *props, obs_property_t *property, void *data);
 
+struct route_text {
+	std::vector<char> data;
+	char *route_id;
+	char *route_id_text;
+	char *route_desc;
+}
+
 class ASIOPlugin {
 private:
 	AudioIODevice          *_device   = nullptr;
@@ -423,6 +430,10 @@ private:
 	std::vector<uint16_t>   _route;
 	speaker_layout          _speakers;
 
+	// removing unnecessary allocations...
+	// NOTE: not specific to any one plugin, could be lifted out
+	// but must be made sure to be thread-safe
+	std::vector<route_text> _route_text;
 public:
 	AudioIODevice *getDevice()
 	{
@@ -479,6 +490,48 @@ public:
 		mybox.exec();
 		return true;
 	}
+	
+	// NOTE: should be called in increasing order [0 to i]
+	void prepare_route_idx(size_t i) {
+		if (!(i < _route_text.size())) {
+			route_text& text = _route_text.emplace_back();
+			// Bit ridiculous, we're using 3~ allocations to do 1...could use fmt library to do this mess
+			std::string i_str = std::to_string(i);
+
+			std::string tmp;
+			tmp += "route ";
+			tmp += i_str;
+
+			text.data.insert(text.data.end(), tmp.begin(), tmp.end());
+			text.data.insert(text.data.end(), '\0'); // make sure it's a c-style string
+
+			size_t route_id_text_offset = text.data.size();
+			tmp.clear();
+
+			tmp += "Route.";
+			tmp += i_str;
+			std::string module_tmp = obs_module_text(tmp.c_str());
+
+			text.data.insert(text.data.end(), module_tmp.begin(), module_tmp.end());
+			text.data.insert(text.data.end(), '\0'); // make sure it's a c-style string
+
+			size_t route_desc_offset = text.data.size();
+			tmp.clear();
+			module_tmp.clear();
+
+			tmp += "Route.Desc.";
+			tmp += i_str;
+
+			module_tmp.append(obs_module_text(tmp.c_str()));
+
+			text.data.insert(text.data.end(), module_tmp.begin(), module_tmp.end());
+			text.data.insert(text.data.end(), '\0'); // make sure it's a c-style string
+
+			text.route_id = text.data.data() + 0;
+			text.route_id_text = text.data.data() + route_id_text_offset;
+			text.route_desc = text.data.data() + route_desc_offset;
+		}
+	}
 
 	static obs_properties_t *Properties(void *vptr)
 	{
@@ -488,8 +541,7 @@ public:
 		obs_property_t               *format;
 		obs_property_t               *panel;
 		obs_property_t               *button;
-		int                           max_channels = get_max_obs_channels();
-		std::vector<obs_property_t *> route(max_channels, nullptr);
+		int                           max_channels = get_max_obs_channels();	
 
 		props   = obs_properties_create();
 		devices = obs_properties_add_list(props, "device_id", obs_module_text("Device"), OBS_COMBO_TYPE_LIST,
@@ -505,11 +557,14 @@ public:
 		obs_property_set_modified_callback(format, asio_layout_changed);
 
 		for (size_t i = 0; i < max_channels; i++) {
-			route[i] = obs_properties_add_list(props, ("route " + std::to_string(i)).c_str(),
-					obs_module_text(("Route." + std::to_string(i)).c_str()), OBS_COMBO_TYPE_LIST,
+			prepare_route_idx(i);
+			const route_text &text = _route_text[i];
+
+			obs_property_t *current_route = obs_properties_add_list(props, text.route_id,
+					text.route_id_text, OBS_COMBO_TYPE_LIST,
 					OBS_COMBO_FORMAT_INT);
 			obs_property_set_long_description(
-					route[i], obs_module_text(("Route.Desc." + std::to_string(i)).c_str()));
+					current_route, text.route_desc);
 		}
 
 		panel = obs_properties_add_button2(props, "ctrl", obs_module_text("Control Panel"), show_panel, vptr);
@@ -602,9 +657,11 @@ public:
 			r.reserve(max_channels);
 
 			for (int i = 0; i < recorded_channels; i++) {
-				std::string route_str = "route " + std::to_string(i);
-				r.push_back(obs_data_get_int(settings, route_str.c_str()));
+				prepare_route_idx(i);
+				const route_text &text = _route_text[i];
+				r.push_back(obs_data_get_int(settings, text.route_id));
 			}
+
 			for (int i = recorded_channels; i < max_channels; i++) {
 				r.push_back(-1);
 			}
@@ -642,12 +699,14 @@ public:
 		int max_channels      = get_max_obs_channels();
 		// default is muted channels
 		for (int i = 0; i < recorded_channels; i++) {
-			std::string name = "route " + std::to_string(i);
-			obs_data_set_default_int(settings, name.c_str(), -1);
+			prepare_route_idx(i);
+			const route_text &text = _route_text[i];
+			obs_data_set_default_int(settings, text.route_id, -1);
 		}
 		for (int i = recorded_channels; i < max_channels; i++) {
-			std::string name = "route " + std::to_string(i);
-			obs_data_set_default_int(settings, name.c_str(), -1);
+			prepare_route_idx(i);
+			const route_text &text = _route_text[i];
+			obs_data_set_default_int(settings, text.route_id, -1);
 		}
 
 		obs_data_set_default_int(settings, "speaker_layout", aoi.speakers);
@@ -708,6 +767,7 @@ static bool fill_out_channels_modified(obs_properties_t *props, obs_property_t *
 
 	int i = 0;
 
+	// TODO: check that .toStdString() isn't some form of allocating function, if it is memoize the result	
 	for (; i < input_channels; i++)
 		obs_property_list_add_int(list, in_names[i].toStdString().c_str(), i);
 
@@ -740,8 +800,10 @@ static bool asio_device_changed(void *vptr, obs_properties_t *props, obs_propert
 		obs_property_list_item_disable(list, 0, true);
 	} else {
 		for (i = 0; i < max_channels; i++) {
-			std::string     name = "route " + std::to_string(i);
-			obs_property_t *r    = obs_properties_get(props, name.c_str());
+			prepare_route_idx(i);
+			const route_text &text = _route_text[i];
+
+			obs_property_t *r    = obs_properties_get(props, text.route_id);
 			obs_property_list_clear(r);
 			obs_property_set_modified_callback(r, fill_out_channels_modified);
 			obs_property_set_visible(r, i < recorded_channels);
@@ -765,8 +827,10 @@ static bool asio_layout_changed(obs_properties_t *props, obs_property_t *list, o
 	int            recorded_channels = get_audio_channels(layout);
 	int            i                 = 0;
 	for (i = 0; i < max_channels; i++) {
-		std::string     name = "route " + std::to_string(i);
-		obs_property_t *r    = obs_properties_get(props, name.c_str());
+		prepare_route_idx(i);
+		const route_text &text = _route_text[i];
+
+		obs_property_t *r    = obs_properties_get(props, text.route_id);
 		obs_property_list_clear(r);
 		obs_property_set_modified_callback(r, fill_out_channels_modified);
 		obs_property_set_visible(r, i < recorded_channels);
