@@ -605,6 +605,7 @@ public:
 				std::string route_str = "route " + std::to_string(i);
 				r.push_back(obs_data_get_int(settings, route_str.c_str()));
 			}
+
 			for (int i = recorded_channels; i < max_channels; i++) {
 				r.push_back(-1);
 			}
@@ -707,7 +708,6 @@ static bool fill_out_channels_modified(obs_properties_t *props, obs_property_t *
 	int               input_channels = in_names.size();
 
 	int i = 0;
-
 	for (; i < input_channels; i++)
 		obs_property_list_add_int(list, in_names[i].toStdString().c_str(), i);
 
@@ -723,7 +723,6 @@ static bool asio_device_changed(void *vptr, obs_properties_t *props, obs_propert
 	obs_property_t *panel        = obs_properties_get(props, "ctrl");
 
 	int recorded_channels = get_audio_channels(layout);
-
 	size_t itemCount = obs_property_list_item_count(list);
 	bool   itemFound = false;
 
@@ -742,7 +741,7 @@ static bool asio_device_changed(void *vptr, obs_properties_t *props, obs_propert
 		for (i = 0; i < max_channels; i++) {
 			std::string     name = "route " + std::to_string(i);
 			obs_property_t *r    = obs_properties_get(props, name.c_str());
-			obs_property_list_clear(r);
+			fill_out_channels_modified(props, r, settings);
 			obs_property_set_modified_callback(r, fill_out_channels_modified);
 			obs_property_set_visible(r, i < recorded_channels);
 		}
@@ -767,7 +766,7 @@ static bool asio_layout_changed(obs_properties_t *props, obs_property_t *list, o
 	for (i = 0; i < max_channels; i++) {
 		std::string     name = "route " + std::to_string(i);
 		obs_property_t *r    = obs_properties_get(props, name.c_str());
-		obs_property_list_clear(r);
+		fill_out_channels_modified(props, r, settings);
 		obs_property_set_modified_callback(r, fill_out_channels_modified);
 		obs_property_set_visible(r, i < recorded_channels);
 	}
