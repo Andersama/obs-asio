@@ -429,13 +429,13 @@ public:
 		return _device;
 	}
 
-	ASIOPlugin::ASIOPlugin(obs_data_t *settings, obs_source_t *source)
+	ASIOPlugin(obs_data_t *settings, obs_source_t *source)
 	{
 		UNUSED_PARAMETER(settings);
 		_listener = new AudioCB::AudioListener(source, nullptr);
 	}
 
-	ASIOPlugin::~ASIOPlugin()
+	~ASIOPlugin()
 	{
 		if (_listener) {
 			AudioCB *cb = _listener->getCallback();
@@ -742,9 +742,9 @@ static bool asio_device_changed(void *vptr, obs_properties_t *props, obs_propert
 		for (i = 0; i < max_channels; i++) {
 			std::string     name = "route " + std::to_string(i);
 			obs_property_t *r    = obs_properties_get(props, name.c_str());
-			obs_property_list_clear(r);
 			obs_property_set_modified_callback(r, fill_out_channels_modified);
 			obs_property_set_visible(r, i < recorded_channels);
+			fill_out_channels_modified(props, r, settings);
 		}
 	}
 
@@ -767,9 +767,9 @@ static bool asio_layout_changed(obs_properties_t *props, obs_property_t *list, o
 	for (i = 0; i < max_channels; i++) {
 		std::string     name = "route " + std::to_string(i);
 		obs_property_t *r    = obs_properties_get(props, name.c_str());
-		obs_property_list_clear(r);
 		obs_property_set_modified_callback(r, fill_out_channels_modified);
 		obs_property_set_visible(r, i < recorded_channels);
+		fill_out_channels_modified(props, r, settings);
 	}
 	return true;
 }
